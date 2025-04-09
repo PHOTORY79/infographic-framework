@@ -1,5 +1,5 @@
 // 전역 변수 및 상수
-const HELP_DOC_URL = 'https://drive.google.com/your-document-url'; // 도움말 문서 URL 설정
+const HELP_DOC_URL = 'https://drive.google.com/file/d/1_mNPzUPtWtQAVRjxBCwEkZkxs3zApJzZ/view?usp=sharing'; // 도움말 문서 URL 설정
 let currentInfographicData = null;
 
 // 템플릿 데이터
