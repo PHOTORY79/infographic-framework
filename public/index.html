@@ -1,43 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>인포그래픽 프레임워크</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Font Awesome 아이콘 사용을 위한 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>인포그래픽 프레임워크</h1>
+      <p>CSV 데이터를 구조화된 인포그래픽으로 변환하는 도구</p>
+    </header>
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    <!-- CSV 입력 패널 -->
+    <div class="panel">
+      <div class="panel-header" id="csvInputHeader">
+        <h2><i class="fas fa-table icon"></i> CSV 데이터 입력</h2>
+        <i class="fas fa-chevron-down toggle-icon"></i>
+      </div>
+      <div class="panel-body" id="csvInputBody">
+        <div class="csv-input">
+          <textarea id="csvData" placeholder="3자리 ID와 키워드를 쉼표로 구분하여 입력하세요. 각 항목은 새 줄에 입력합니다.&#10;&#10;예: 101,Bar Chart&#10;102,Business Presentation&#10;301,Vertical&#10;302,Corporate"></textarea>
+          <p>각 항목은 3자리 ID와 쉼표, 그리고 키워드로 구성됩니다.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="generateBtn">
+            <i class="fas fa-magic icon"></i> 인포그래픽 생성
+          </button>
+          <button class="btn btn-secondary" id="parseCSVBtn">
+            <i class="fas fa-file-csv icon"></i> CSV 파싱
+          </button>
+        </div>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+        <h3>또는 예시 템플릿을 선택하세요:</h3>
+        <div class="template-buttons">
+          <button class="template-btn" data-template="bar-chart">막대 차트</button>
+          <button class="template-btn" data-template="pie-chart">파이 차트</button>
+          <button class="template-btn" data-template="line-chart">선 그래프</button>
+          <button class="template-btn" data-template="process-diagram">프로세스 다이어그램</button>
+          <button class="template-btn" data-template="comparison-chart">비교 차트</button>
+          <button class="template-btn" data-template="timeline">타임라인</button>
+        </div>
+      </div>
+    </div>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+    <!-- 프레임워크 데이터 패널 -->
+    <div class="panel">
+      <div class="panel-header" id="frameworkDataHeader">
+        <h2><i class="fas fa-layer-group icon"></i> 프레임워크 데이터</h2>
+        <i class="fas fa-chevron-down toggle-icon"></i>
+      </div>
+      <div class="panel-body" id="frameworkDataBody">
+        <div class="framework-data">
+          <!-- 데이터는 JavaScript로 채워집니다 -->
+          <div class="data-item">
+            <h3>메타 레이어 (100번대)</h3>
+            <div class="data-value" id="metaLayerData">데이터가 없습니다.</div>
+          </div>
+          <div class="data-item">
+            <h3>데이터 레이어 (200번대)</h3>
+            <div class="data-value" id="dataLayerData">데이터가 없습니다.</div>
+          </div>
+          <div class="data-item">
+            <h3>디자인 레이어 (300번대)</h3>
+            <div class="data-value" id="designLayerData">데이터가 없습니다.</div>
+          </div>
+          <div class="data-item">
+            <h3>콘텐츠 레이어 (400번대)</h3>
+            <div class="data-value" id="contentLayerData">데이터가 없습니다.</div>
+          </div>
+          <div class="data-item">
+            <h3>기술 레이어 (500번대)</h3>
+            <div class="data-value" id="techLayerData">데이터가 없습니다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 인포그래픽 미리보기 -->
+    <div class="preview-container">
+      <div class="preview-header">
+        <h2><i class="fas fa-eye"></i> 인포그래픽 미리보기</h2>
+      </div>
+      <div class="preview-content" id="infographicPreview">
+        <!-- 인포그래픽이 여기에 렌더링됩니다 -->
+        <div style="text-align: center; color: #6b7280;">
+          <i class="fas fa-chart-bar" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+          <p>인포그래픽을 생성하려면 CSV 데이터를 입력하고 '인포그래픽 생성' 버튼을 클릭하세요.</p>
+        </div>
+      </div>
+      <div class="preview-info" id="previewInfo" style="display: none;">
+        <h3>인포그래픽 정보</h3>
+        <ul id="infographicDetails">
+          <!-- 인포그래픽 세부 정보가 여기에 표시됩니다 -->
+        </ul>
+      </div>
+      <div class="export-buttons" id="exportButtons" style="display: none;">
+        <button class="btn btn-primary" id="svgExportBtn">
+          <i class="fas fa-download icon"></i> SVG 다운로드
+        </button>
+        <button class="btn btn-primary" id="pngExportBtn">
+          <i class="fas fa-download icon"></i> PNG 다운로드
+        </button>
+        <button class="btn btn-secondary" id="jsonExportBtn">
+          <i class="fas fa-code icon"></i> JSON 형식으로 내보내기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 도움말 버튼 -->
+  <button class="help-btn" id="helpBtn" title="도움말">
+    <i class="fas fa-question"></i>
+  </button>
+
+  <!-- 주요 JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.1.9/Recharts.js"></script>
+  <script src="app.js"></script>
+</body>
 </html>
