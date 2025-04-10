@@ -238,5 +238,53 @@
   <script type="module" src="js/file-upload.js"></script>
   <script type="module" src="js/chart-renderers.js"></script>
   <script type="module" src="js/main.js"></script>
+
+  <script>
+  // 페이지 완전히 로드된 후 실행
+  window.addEventListener('load', function() {
+    // 요소 참조
+    const templateSelector = document.getElementById('template-selector');
+    const csvInput = document.getElementById('csv-input');
+    const chartTypeSelector = document.getElementById('chart-type-selector');
+    const errorContainer = document.getElementById('error-container');
+    
+    // 템플릿 데이터 (templates 전역 변수가 없는 경우 대비)
+    const templateData = {
+      'bar-chart': `101,Bar Chart\n102,Business Presentation\n103,Executives\n201,Numerical\n202,Comparison\n301,Vertical\n302,Corporate\n401,분기별 매출 실적\n402,매 분기 꾸준한 성장세를 보이고 있습니다.\n403,Values Only\n501,SVG\n601,["Q1", "Q2", "Q3", "Q4"]\n602,"매출(백만원)"\n701,[120, 150, 130, 180]\n706,160`,
+      'pie-chart': `101,Pie Chart\n102,Report\n103,Stakeholders\n201,Categorical\n202,Composition\n301,Single Focus\n302,Vibrant\n401,지역별 매출 비중\n403,Percentage\n501,SVG\n601,["서울", "부산", "인천", "대구", "광주"]\n701,[40, 25, 15, 12, 8]`,
+      'line-chart': `101,Line Chart\n102,Business Presentation\n201,Temporal\n202,Trend\n301,Horizontal\n302,Corporate\n401,분기별 매출 추이\n501,SVG\n601,["Q1", "Q2", "Q3", "Q4"]\n602,"매출(백만원)"\n701,[120, 150, 130, 180]`,
+      'radar-chart': `101,Radar Chart\n102,Comparison Analysis\n202,Comparison\n301,Single Focus\n302,Brand Colors\n401,제품 성능 비교\n501,SVG\n601,["성능", "가격", "디자인", "내구성", "사용성"]\n602,"점수"\n603,["제품 A", "제품 B"]\n606,["0", "1", "2", "3", "4", "5"]\n701,[4, 3, 5, 4, 3]\n702,[3, 5, 2, 5, 4]`,
+      'process-diagram': `101,Process Diagram\n102,Educational\n202,Sequential\n301,Horizontal\n302,Vibrant\n304,Flat Icons\n305,Arrows\n306,Size Variation\n401,5단계 제품 개발 프로세스\n402,아이디어부터 출시까지의 주요 단계\n501,SVG\n504,Sequential Reveal\n601,["아이디어 발굴", "컨셉 개발", "설계", "테스트", "출시"]\n701,["새로운 시장 기회 탐색\\n경쟁사 분석\\n고객 니즈 파악", "제품 컨셉 정의\\n기능 명세\\n시장성 평가", "상세 설계\\n프로토타입 개발\\n생산 계획", "품질 테스트\\n사용자 테스트\\n피드백 수집", "마케팅 캠페인\\n판매 채널 확보\\n고객 지원 준비"]`,
+      'comparison-chart': `101,Comparison Chart\n102,Marketing\n201,Numerical\n202,Comparison\n301,Split Screen\n302,Brand Colors\n401,제품 기능 비교\n501,SVG\n601,["크기", "속도", "성능", "가격", "디자인"]\n603,["제품 A", "제품 B"]\n701,[8, 6, 9, 5, 8]\n702,[5, 9, 7, 7, 6]`,
+      'timeline': `101,Timeline\n102,Educational\n201,Temporal\n202,Sequential\n301,Horizontal\n302,Cool Tones\n401,프로젝트 타임라인\n501,SVG\n601,["1월", "2월", "3월", "4월", "5월"]\n602,"진행도"\n701,["프로젝트 시작", "요구사항 분석", "디자인 완료", "개발 단계", "출시"]\n702,["초기 계획 및 팀 구성", "사용자 요구사항 수집 및 분석", "UI/UX 디자인 완료", "코어 기능 개발", "제품 출시 및 마케팅"]`
+    };
+    
+    // 템플릿 선택 이벤트 직접 연결
+    if (templateSelector && csvInput) {
+      templateSelector.addEventListener('change', function() {
+        const selectedTemplate = this.value;
+        const templateContent = templateData[selectedTemplate];
+        
+        if (templateContent) {
+          // CSV 입력 필드에 템플릿 데이터 적용
+          csvInput.value = templateContent;
+          
+          // 차트 유형 추출 및 변경
+          const chartTypeMatch = templateContent.match(/101,(.*)/);
+          if (chartTypeMatch && chartTypeSelector) {
+            chartTypeSelector.value = chartTypeMatch[1].trim();
+          }
+          
+          // 성공 메시지 표시
+          if (errorContainer) {
+            errorContainer.innerHTML = '<div class="alert alert-success">템플릿이 적용되었습니다.</div>';
+            setTimeout(() => { errorContainer.innerHTML = ''; }, 3000);
+          }
+        }
+      });
+    }
+  });
+</script>
+  
 </body>
 </html>
