@@ -157,15 +157,26 @@ document.addEventListener('DOMContentLoaded', function() {
   // 파일 업로드 기능 초기화
   initFileUpload();
   
-  // 템플릿 변경 이벤트 처리
-  if (templateSelector) {
-    templateSelector.addEventListener('change', function() {
-      const selectedTemplate = this.value;
-      if (templates[selectedTemplate]) {
-        csvInput.value = templates[selectedTemplate];
+ // 템플릿 변경 이벤트 처리
+if (templateSelector) {
+  templateSelector.addEventListener('change', function() {
+    const selectedTemplate = this.value;
+    if (templates[selectedTemplate]) {
+      // CSV 입력 필드에 템플릿 데이터 적용
+      csvInput.value = templates[selectedTemplate];
+      
+      // 선택된 템플릿의 차트 유형 추출 (101,XXX 형식에서 XXX 부분)
+      const chartTypeMatch = templates[selectedTemplate].match(/101,(.*)/);
+      if (chartTypeMatch && chartTypeSelector) {
+        // 차트 유형 선택기도 같은 값으로 업데이트
+        chartTypeSelector.value = chartTypeMatch[1].trim();
       }
-    });
-  }
+      
+      // 성공 메시지 표시
+      showSuccess('템플릿이 적용되었습니다.');
+    }
+  });
+}
   
   // 인포그래픽 생성 버튼 클릭 이벤트
   if (generateButton) {
