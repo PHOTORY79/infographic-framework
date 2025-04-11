@@ -372,37 +372,43 @@ window.addEventListener('load', function() {
 
   // 간단한 막대 차트 렌더링
   function renderSimpleBarChart(container, data) {
-    const xLabels = data['601'] || [];
-    const dataset = data['701'] || [];
+  const xLabels = data['601'] || [];
+  const dataset = data['701'] || [];
+  
+  // 간단한 막대 차트 컨테이너 생성
+  const chartDiv = document.createElement('div');
+  chartDiv.style.width = '100%';
+  chartDiv.style.height = '400px';
+  chartDiv.style.padding = '20px';
+  container.appendChild(chartDiv);
+  
+  // 차트 HTML 생성
+  let chartHTML = `
+    <div style="height: 350px; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 40px; border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; position: relative;">
+  `;
+  
+  // 최대값 계산
+  const maxValue = Math.max(...dataset.map(v => Number(v) || 0));
+  const values = dataset.map(v => Number(v) || 0);
+  
+  // 막대 생성
+  for (let i = 0; i < Math.min(xLabels.length, values.length); i++) {
+    const value = values[i];
+    const height = Math.round((value / maxValue) * 300); // 최대 높이 300px
     
-    const chartDiv = document.createElement('div');
-    chartDiv.style.width = '100%';
-    chartDiv.style.height = '300px';
-    chartDiv.style.padding = '20px';
-    chartDiv.style.boxSizing = 'border-box';
-    container.appendChild(chartDiv);
-    
-    let chartHTML = '<div style="display:flex; height:100%; align-items:flex-end; gap:10px; padding-bottom:30px;">';
-    
-    const maxValue = Math.max(...dataset.map(v => Number(v) || 0));
-    
-    for (let i = 0; i < Math.min(xLabels.length, dataset.length); i++) {
-      const value = Number(dataset[i]) || 0;
-      const height = (value / maxValue) * 100;
-      
-      chartHTML += `
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
-          <div style="background:#4285F4; width:80%; height:${height}%; position:relative;">
-            <span style="position:absolute; top:-25px; width:100%; text-align:center;">${value}</span>
-          </div>
-          <div style="margin-top:10px; text-align:center; width:100%;">${xLabels[i]}</div>
+    chartHTML += `
+      <div style="display: flex; flex-direction: column; align-items: center; width: ${100 / xLabels.length}%;">
+        <div style="height: ${height}px; width: 40px; background-color: #4285F4; margin-bottom: 5px; position: relative; text-align: center;">
+          <div style="position: absolute; top: -25px; width: 100%; text-align: center;">${value}</div>
         </div>
-      `;
-    }
-    
-    chartHTML += '</div>';
-    chartDiv.innerHTML = chartHTML;
+        <div>${xLabels[i]}</div>
+      </div>
+    `;
   }
+  
+  chartHTML += '</div>';
+  chartDiv.innerHTML = chartHTML;
+}
   
   // 간단한 파이 차트 렌더링
   function renderSimplePieChart(container, data) {
