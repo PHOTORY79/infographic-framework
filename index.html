@@ -285,6 +285,19 @@
     }
   });
 </script>
+
+<!-- 디버깅 스크립트 추가 -->
+  <script>
+  window.addEventListener('load', function() {
+    console.log('페이지 로드 완료');
+    
+    // 모듈들의 글로벌 함수/변수 확인
+    console.log('utils 모듈:', typeof getColorScheme);
+    console.log('csv-parser 모듈:', typeof processCSV);
+    console.log('chart-renderers 모듈:', typeof renderInfographic);
+    console.log('main 모듈 window.generateInfographic:', typeof window.generateInfographic);
+  });
+  </script>
   
 </body>
 </html>
