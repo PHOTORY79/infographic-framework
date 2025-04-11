@@ -412,40 +412,83 @@ window.addEventListener('load', function() {
   
   // 간단한 파이 차트 렌더링
   function renderSimplePieChart(container, data) {
-    const labels = data['601'] || [];
-    const values = data['701'] || [];
+  const labels = data['601'] || [];
+  const values = data['701'] || [];
+  
+  // 차트 컨테이너 생성
+  const chartDiv = document.createElement('div');
+  chartDiv.style.width = '100%';
+  chartDiv.style.padding = '20px';
+  container.appendChild(chartDiv);
+  
+  // 데이터 합계 및 각도 계산
+  const total = values.reduce((sum, val) => sum + (Number(val) || 0), 0);
+  
+  // 파이 차트 SVG 생성
+  let svgHTML = `
+    <div style="display: flex; flex-wrap: wrap;">
+      <div style="width: 50%; min-width: 300px;">
+        <svg width="100%" height="300" viewBox="0 0 300 300">
+          <g transform="translate(150, 150)">
+  `;
+  
+  // 파이 조각 생성
+  let startAngle = 0;
+  for (let i = 0; i < values.length; i++) {
+    const value = Number(values[i]) || 0;
+    const percentage = value / total;
+    const endAngle = startAngle + percentage * 2 * Math.PI;
     
-    const chartDiv = document.createElement('div');
-    chartDiv.style.width = '100%';
-    chartDiv.style.padding = '20px';
-    chartDiv.style.boxSizing = 'border-box';
-    container.appendChild(chartDiv);
+    // 파이 조각 경로 계산
+    const x1 = Math.cos(startAngle) * 100;
+    const y1 = Math.sin(startAngle) * 100;
+    const x2 = Math.cos(endAngle) * 100;
+    const y2 = Math.sin(endAngle) * 100;
     
-    let chartHTML = '<div style="display:flex; flex-wrap:wrap; gap:20px;">';
+    const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
     
-    // 간단한 막대로 파이 차트 시각화
-    const total = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+    const pathData = `M 0 0 L ${x1} ${y1} A 100 100 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
     
-    for (let i = 0; i < Math.min(labels.length, values.length); i++) {
-      const value = Number(values[i]) || 0;
-      const percentage = (value / total) * 100;
-      
-      chartHTML += `
-        <div style="flex: 0 0 45%; display:flex; flex-direction:column; margin-bottom:15px;">
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-            <div style="width:20px; height:20px; background-color:hsl(${i * 30}, 70%, 60%);"></div>
-            <div>${labels[i]}: ${value} (${percentage.toFixed(1)}%)</div>
-          </div>
-          <div style="height:20px; background-color:#f0f0f0; width:100%;">
-            <div style="height:100%; width:${percentage}%; background-color:hsl(${i * 30}, 70%, 60%);"></div>
-          </div>
-        </div>
-      `;
-    }
+    // 색상 계산
+    const hue = (i * 30) % 360;
     
-    chartHTML += '</div>';
-    chartDiv.innerHTML = chartHTML;
+    svgHTML += `
+      <path d="${pathData}" fill="hsl(${hue}, 70%, 60%)" stroke="white" stroke-width="1"></path>
+    `;
+    
+    startAngle = endAngle;
   }
+  
+  svgHTML += `
+          </g>
+        </svg>
+      </div>
+      <div style="width: 50%; min-width: 300px; padding: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+  `;
+  
+  // 범례 생성
+  for (let i = 0; i < Math.min(labels.length, values.length); i++) {
+    const value = Number(values[i]) || 0;
+    const percentage = (value / total) * 100;
+    const hue = (i * 30) % 360;
+    
+    svgHTML += `
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 20px; height: 20px; background-color: hsl(${hue}, 70%, 60%);"></div>
+        <div>${labels[i]}: ${value} (${percentage.toFixed(1)}%)</div>
+      </div>
+    `;
+  }
+  
+  svgHTML += `
+        </div>
+      </div>
+    </div>
+  `;
+  
+  chartDiv.innerHTML = svgHTML;
+}
   
   // 간단한 레이더 차트 렌더링
   function renderSimpleRadarChart(container, data) {
