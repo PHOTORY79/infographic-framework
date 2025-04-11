@@ -291,156 +291,6 @@
 window.addEventListener('load', function() {
   console.log('페이지 로드 완료');
   
-  // CSV 파싱 함수 직접 구현
-  function parseCSVData(csvText) {
-    const result = {
-      data: {}
-    };
-    
-    if (!csvText) {
-      console.error('CSV 데이터가 비어 있습니다.');
-      return result;
-    }
-    
-    const lines = csvText.split(/\r?\n/).filter(line => line.trim());
-    
-    lines.forEach((line, index) => {
-      // 첫 번째 쉼표 위치 찾기
-      const firstCommaIndex = line.indexOf(',');
-      
-      if (firstCommaIndex === -1) {
-        console.warn(`라인 ${index + 1}: 쉼표가 없습니다.`);
-        return;
-      }
-      
-      // ID와 값 분리
-      const id = line.substring(0, firstCommaIndex).trim();
-      const value = line.substring(firstCommaIndex + 1).trim();
-      
-      // 값이 JSON 배열인지 확인 및 파싱
-      if (value.startsWith('[') && value.endsWith(']')) {
-        try {
-          result.data[id] = JSON.parse(value);
-        } catch (error) {
-          console.error(`JSON 파싱 오류 (ID: ${id}):`, error);
-          result.data[id] = value; // 파싱 실패 시 원래 값 사용
-        }
-      } else {
-        // 따옴표로 감싸진 문자열에서 따옴표 제거
-        if (value.startsWith('"') && value.endsWith('"')) {
-          result.data[id] = value.substring(1, value.length - 1);
-        } else {
-          result.data[id] = value;
-        }
-      }
-    });
-    
-    console.log('파싱된 CSV 데이터:', result.data);
-    return result;
-  }
-  
-  // 간단한 인포그래픽 렌더링 함수
-  function renderSimpleChart(container, data) {
-    // 컨테이너 초기화
-    container.innerHTML = '';
-    
-    const visualizationType = data['101'] ? data['101'].toLowerCase() : '';
-    const chartTitle = data['401'] || '인포그래픽';
-    
-    // 간단한 헤더 추가
-    const header = document.createElement('h3');
-    header.textContent = chartTitle;
-    header.style.textAlign = 'center';
-    container.appendChild(header);
-    
-    if (visualizationType.includes('bar chart')) {
-      // 간단한 막대 차트
-      renderSimpleBarChart(container, data);
-    } else if (visualizationType.includes('pie chart')) {
-      // 간단한 파이 차트
-      renderSimplePieChart(container, data);
-    } else {
-      // 지원되지 않는 차트 유형
-      container.innerHTML += `
-        <div class="text-center text-danger" style="padding: 20px;">
-          <i class="fas fa-exclamation-triangle" style="font-size: 3rem;"></i>
-          <p>차트 유형 "${data['101'] || '지정되지 않음'}"에 대한 렌더링 함수가 준비 중입니다.</p>
-        </div>
-      `;
-    }
-  }
-  
-  // 간단한 막대 차트 렌더링
-  function renderSimpleBarChart(container, data) {
-    const xLabels = data['601'] || [];
-    const dataset = data['701'] || [];
-    
-    const chartDiv = document.createElement('div');
-    chartDiv.style.width = '100%';
-    chartDiv.style.height = '300px';
-    chartDiv.style.padding = '20px';
-    chartDiv.style.boxSizing = 'border-box';
-    container.appendChild(chartDiv);
-    
-    let chartHTML = '<div style="display:flex; height:100%; align-items:flex-end; gap:10px; padding-bottom:30px;">';
-    
-    const maxValue = Math.max(...dataset.map(v => Number(v) || 0));
-    
-    for (let i = 0; i < Math.min(xLabels.length, dataset.length); i++) {
-      const value = Number(dataset[i]) || 0;
-      const height = (value / maxValue) * 100;
-      
-      chartHTML += `
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
-          <div style="background:#4285F4; width:80%; height:${height}%; position:relative;">
-            <span style="position:absolute; top:-25px; width:100%; text-align:center;">${value}</span>
-          </div>
-          <div style="margin-top:10px; text-align:center; width:100%;">${xLabels[i]}</div>
-        </div>
-      `;
-    }
-    
-    chartHTML += '</div>';
-    chartDiv.innerHTML = chartHTML;
-  }
-  
-  // 간단한 파이 차트 렌더링
-  function renderSimplePieChart(container, data) {
-    const labels = data['601'] || [];
-    const values = data['701'] || [];
-    
-    const chartDiv = document.createElement('div');
-    chartDiv.style.width = '100%';
-    chartDiv.style.padding = '20px';
-    chartDiv.style.boxSizing = 'border-box';
-    container.appendChild(chartDiv);
-    
-    let chartHTML = '<div style="display:flex; flex-wrap:wrap; gap:20px;">';
-    
-    // 간단한 막대로 파이 차트 시각화
-    const total = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
-    
-    for (let i = 0; i < Math.min(labels.length, values.length); i++) {
-      const value = Number(values[i]) || 0;
-      const percentage = (value / total) * 100;
-      
-      chartHTML += `
-        <div style="flex: 0 0 45%; display:flex; flex-direction:column; margin-bottom:15px;">
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-            <div style="width:20px; height:20px; background-color:hsl(${i * 30}, 70%, 60%);"></div>
-            <div>${labels[i]}: ${value} (${percentage.toFixed(1)}%)</div>
-          </div>
-          <div style="height:20px; background-color:#f0f0f0; width:100%;">
-            <div style="height:100%; width:${percentage}%; background-color:hsl(${i * 30}, 70%, 60%);"></div>
-          </div>
-        </div>
-      `;
-    }
-    
-    chartHTML += '</div>';
-    chartDiv.innerHTML = chartHTML;
-  }
-  
   // 인포그래픽 생성 버튼에 이벤트 리스너 연결
   document.getElementById('generate-button').addEventListener('click', function() {
     console.log('인포그래픽 생성 버튼 클릭됨');
@@ -451,16 +301,30 @@ window.addEventListener('load', function() {
       const csvText = csvInput.value;
       console.log('CSV 데이터 길이:', csvText.length);
       
-      // CSV 파싱
-      const parseResult = parseCSVData(csvText);
-      const data = parseResult.data;
-      
       // 미리보기 컨테이너 가져오기
       const previewContainer = document.getElementById('preview-container');
       console.log('미리보기 컨테이너 찾음:', !!previewContainer);
       
-      // 간단한 인포그래픽 렌더링
-      renderSimpleChart(previewContainer, data);
+      // 매우 간단한 테스트 차트 그리기
+      const testHTML = `
+        <div style="padding:20px; text-align:center;">
+          <h3>테스트 차트</h3>
+          <div style="display:flex; height:200px; justify-content:center; margin-top:30px;">
+            <div style="width:50px; background:red; margin:0 5px; height:50%;"></div>
+            <div style="width:50px; background:green; margin:0 5px; height:70%;"></div>
+            <div style="width:50px; background:blue; margin:0 5px; height:90%;"></div>
+            <div style="width:50px; background:purple; margin:0 5px; height:60%;"></div>
+          </div>
+          <div style="margin-top:10px;">
+            <span style="margin:0 15px;">항목 1</span>
+            <span style="margin:0 15px;">항목 2</span>
+            <span style="margin:0 15px;">항목 3</span>
+            <span style="margin:0 15px;">항목 4</span>
+          </div>
+        </div>
+      `;
+      
+      previewContainer.innerHTML = testHTML;
       
       // 다운로드 버튼 활성화
       const downloadButton = document.getElementById('download-button');
