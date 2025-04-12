@@ -800,8 +800,8 @@ function renderSimpleLineChart(container, data) {
       const isEven = index % 2 === 0;
       
       // 홀수/짝수 이벤트 위치 조정하여 겹침 방지
-      const topMargin = isEven ? '80px' : '30px';
-      const bottomMargin = isEven ? '30px' : '80px';
+      const topMargin = isEven ? '30px' : '30px';
+      const bottomMargin = isEven ? '80px' : '80px';
       
       html += `
       <div style="flex: 1; max-width: ${100/events.length}%; min-width: 100px; display: flex; flex-direction: column; align-items: center;">
