@@ -1102,7 +1102,9 @@ function renderComparisonChart(container, csvData) {
     labelB.textContent = valueB;
     svg.appendChild(labelB);
   }
-}// 레이더 차트 렌더링 함수
+}
+
+// 레이더 차트 렌더링 함수
 function renderRadarChart(container, csvData) {
   const chartContainer = document.createElement('div');
   chartContainer.className = 'chart-container radar-chart';
