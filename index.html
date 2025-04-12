@@ -804,12 +804,18 @@ function renderSimpleLineChart(container, data) {
       const color = getColor(index);
       const isEven = index % 2 === 0;
       
+      // 홀수/짝수 이벤트 위치 조정하여 겹침 방지
+      const topMargin = isEven ? '80px' : '30px';
+      const bottomMargin = isEven ? '30px' : '80px';
+      
       html += `
-        <div style="flex: 1; max-width: ${100/events.length}%; min-width: 100px; display: flex; flex-direction: column; align-items: center;">
-          <div style="margin-bottom: ${isEven ? '80px' : '30px'}; text-align: center; ${isEven ? '' : 'margin-top: 80px'}">
-            <div style="font-weight: bold; color: ${color};">${title}</div>
-            <div style="font-size: 12px; max-width: 150px; margin-top: 5px;">${description}</div>
+      <div style="flex: 1; max-width: ${100/events.length}%; min-width: 100px; display: flex; flex-direction: column; align-items: center;">
+        <div style="margin-bottom: ${isEven ? '80px' : '30px'}; text-align: center; ${isEven ? '' : 'margin-top: 80px'}">
+          <div style="font-weight: bold; color: ${color};">${title}</div>
+          <div style="font-size: 12px; max-width: 150px; margin-top: 5px;">
+            ${description.length > 25 ? description.substring(0, 25) + '...' : description}
           </div>
+        </div>
           
           <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${color}; margin: 0; z-index: 2; position: relative; ${isEven ? 'top: -10px' : 'bottom: -10px'}"></div>
           
