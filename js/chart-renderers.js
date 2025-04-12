@@ -1284,6 +1284,7 @@ export function renderProcessDiagram(container, csvData) {
  * @param {HTMLElement} container - 렌더링할 컨테이너
  * @param {Object} csvData - 파싱된 CSV 데이터
  */
+export function renderTimeline(container, csvData) {
   const chartContainer = document.createElement('div');
   chartContainer.className = 'chart-container timeline';
   container.appendChild(chartContainer);
@@ -1294,6 +1295,7 @@ export function renderProcessDiagram(container, csvData) {
   const colorScheme = getColorScheme(csvData['302']);
   const chartTitle = csvData['401'] || '타임라인';
   const isVertical = csvData['301'] && csvData['301'].toLowerCase().includes('vertical');
+}
   
   // 데이터가 없으면 종료
   if (!events.length) {
