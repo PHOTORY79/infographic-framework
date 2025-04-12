@@ -812,7 +812,7 @@ function renderTimeline(container, csvData) {
     const startY = 80;
     const endY = 450;
     const timelineLength = endY - startY;
-    const eventSpacing = timelineLength / (numEvents - 1 || 1);
+    const eventSpacing = numEvents > 1 ? timelineLength / (numEvents - 1) : timelineLength;
     
     // 타임라인 선
     const mainLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -836,9 +836,9 @@ function renderTimeline(container, csvData) {
       eventDot.setAttribute('fill', colorScheme[i % colorScheme.length]);
       svg.appendChild(eventDot);
       
-      // 이벤트 날짜/시간
+      // 이벤트 날짜/시간 - 더 멀리 배치하여 겹침 방지
       const dateText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      dateText.setAttribute('x', timelineX - 20);
+      dateText.setAttribute('x', timelineX - 25);
       dateText.setAttribute('y', eventY);
       dateText.setAttribute('text-anchor', 'end');
       dateText.setAttribute('dominant-baseline', 'middle');
@@ -846,9 +846,9 @@ function renderTimeline(container, csvData) {
       dateText.textContent = events[i] || `이벤트 ${i + 1}`;
       svg.appendChild(dateText);
       
-      // 이벤트 제목
+      // 이벤트 제목 - 오른쪽으로 더 멀리 배치
       const eventTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      eventTitle.setAttribute('x', timelineX + 20);
+      eventTitle.setAttribute('x', timelineX + 25);
       eventTitle.setAttribute('y', eventY);
       eventTitle.setAttribute('dominant-baseline', 'middle');
       eventTitle.setAttribute('font-size', '14');
@@ -856,13 +856,21 @@ function renderTimeline(container, csvData) {
       eventTitle.textContent = titles[i] || '';
       svg.appendChild(eventTitle);
       
-      // 이벤트 설명
+      // 이벤트 설명 - 위치 조정하여 겹침 방지
       if (descriptions && descriptions[i]) {
         const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        descText.setAttribute('x', timelineX + 20);
+        descText.setAttribute('x', timelineX + 25);
         descText.setAttribute('y', eventY + 20);
         descText.setAttribute('font-size', '12');
-        descText.textContent = descriptions[i];
+        
+        // 설명이 길면 잘라서 표시
+        const maxLength = 40;
+        let descContent = descriptions[i].toString();
+        if (descContent.length > maxLength) {
+          descContent = descContent.substring(0, maxLength) + '...';
+        }
+        
+        descText.textContent = descContent;
         svg.appendChild(descText);
       }
     }
@@ -872,7 +880,7 @@ function renderTimeline(container, csvData) {
     const startX = 50;
     const endX = 750;
     const timelineLength = endX - startX;
-    const eventSpacing = timelineLength / (numEvents - 1 || 1);
+    const eventSpacing = numEvents > 1 ? timelineLength / (numEvents - 1) : timelineLength;
     
     // 타임라인 선
     const mainLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -888,8 +896,10 @@ function renderTimeline(container, csvData) {
     for (let i = 0; i < numEvents; i++) {
       const eventX = startX + i * eventSpacing;
       const isEven = i % 2 === 0;
-      const textY = isEven ? timelineY - 50 : timelineY + 50;
-      const descY = isEven ? timelineY - 30 : timelineY + 70;
+      
+      // 홀수/짝수 이벤트 위치 조정하여 겹침 방지
+      const textY = isEven ? timelineY - 70 : timelineY + 70;
+      const descY = isEven ? timelineY - 50 : timelineY + 90;
       
       // 이벤트 점
       const eventDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -918,23 +928,31 @@ function renderTimeline(container, csvData) {
       eventTitle.textContent = titles[i] || '';
       svg.appendChild(eventTitle);
       
-      // 이벤트 설명
+      // 이벤트 설명 - 더 짧게 잘라서 표시
       if (descriptions && descriptions[i]) {
         const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         descText.setAttribute('x', eventX);
         descText.setAttribute('y', descY);
         descText.setAttribute('text-anchor', 'middle');
         descText.setAttribute('font-size', '12');
-        descText.textContent = descriptions[i];
+        
+        // 설명이 길면 잘라서 표시
+        const maxLength = 25;
+        let descContent = descriptions[i].toString();
+        if (descContent.length > maxLength) {
+          descContent = descContent.substring(0, maxLength) + '...';
+        }
+        
+        descText.textContent = descContent;
         svg.appendChild(descText);
       }
       
-      // 연결선
+      // 연결선 - 더 뚜렷하게
       const connector = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       connector.setAttribute('x1', eventX);
       connector.setAttribute('y1', timelineY);
       connector.setAttribute('x2', eventX);
-      connector.setAttribute('y2', isEven ? timelineY - 30 : timelineY + 30);
+      connector.setAttribute('y2', isEven ? timelineY - 40 : timelineY + 40);
       connector.setAttribute('stroke', colorScheme[i % colorScheme.length]);
       connector.setAttribute('stroke-width', '2');
       svg.appendChild(connector);
