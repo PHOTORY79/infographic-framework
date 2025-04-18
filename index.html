@@ -124,7 +124,8 @@ function getColorScheme(key) {
   const palettes = {
     corporate: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368'],
     vibrant:   ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#F5FF33'],
-    monochromatic: ['#333333', '#555555', '#777777', '#999999', '#BBBBBB']
+    monochromatic: ['#333333', '#555555', '#777777', '#999999', '#BBBBBB'],
+    brandcolors:   ['#1877F2', '#E4405F', '#0A66C2', '#E4405F', '#FF0000']
     // 필요하면 계속 추가
   };
   key = (key || 'corporate').toLowerCase().replace(/\s+/g, '');
@@ -1475,11 +1476,11 @@ function renderSimpleRadarChart(container, data) {
   }
   
   // 첫 번째 데이터셋 폴리곤 그리기
-  drawDataPolygon(dataset1, getPaletteColor(0), 0.6);
+  drawDataPolygon(dataset1, getPaletteColor(0, data['302']), 0.6);
   
   // 두 번째 데이터셋이 있으면 그리기
   if (hasSecondDataset) {
-    drawDataPolygon(dataset2, getPaletteColor(1), 0.6);
+    drawDataPolygon(dataset2, getPaletteColor(1, data['302']), 0.6);
   }
   
   // 범례 추가
