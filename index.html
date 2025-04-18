@@ -361,6 +361,8 @@ window.addEventListener('load', function() {
       renderSimpleTimeline(container, data);
     } else if (visualizationType.includes('radar chart')) {
       renderSimpleRadarChart(container, data);
+    } else if (visualizationType.includes('comparison chart')) {
+      renderSimpleComparisonChart(container, data);
     } else {
       container.innerHTML += `
         <div style="text-align:center; color:#e74c3c; padding:30px;">
@@ -653,6 +655,50 @@ function renderSimpleLineChart(container, data) {
   
   svgHTML += '</svg>';
   chartDiv.innerHTML = svgHTML;
+}
+
+ // 비교차트
+  function renderSimpleComparisonChart(container, data) {
+  const labels   = data['601'] || [];   // 예: ['크기','속도','성능',…]
+  const valuesA  = data['701'] || [];   // 첫 번째 제품 값 배열
+  const valuesB  = data['702'] || [];   // 두 번째 제품 값 배열
+  const series   = data['603'] || ['A','B'];
+  const maxValue = Math.max(
+    ...valuesA.map(v=>+v||0),
+    ...valuesB.map(v=>+v||0)
+  );
+
+  // 컨테이너 초기화
+  container.innerHTML = '';
+  const chartDiv = document.createElement('div');
+  chartDiv.style.display = 'flex';
+  chartDiv.style.justifyContent = 'space-around';
+  chartDiv.style.padding = '20px';
+
+  // 축마다 두 개의 막대 생성
+  labels.forEach((lbl,i) => {
+    const a = +valuesA[i] || 0, b = +valuesB[i] || 0;
+    const hA = Math.round((a/maxValue)*100);
+    const hB = Math.round((b/maxValue)*100);
+    chartDiv.innerHTML += `
+      <div style="text-align:center; width: ${100/labels.length - 2}%">
+        <div style="height:${hA}% ; background:#4285F4; margin-bottom:4px;">${a}</div>
+        <div style="height:${hB}% ; background:#EA4335;">${b}</div>
+        <div style="margin-top:8px;font-size:12px;">${lbl}</div>
+      </div>
+    `;
+  });
+
+  // 범례
+  const legend = document.createElement('div');
+  legend.style.textAlign = 'center';
+  legend.innerHTML = `
+    <span style="display:inline-block; width:12px; height:12px; background:#4285F4;"></span> ${series[0]}
+    &nbsp;&nbsp;
+    <span style="display:inline-block; width:12px; height:12px; background:#EA4335;"></span> ${series[1]}
+  `;
+  container.appendChild(chartDiv);
+  container.appendChild(legend);
 }
 
   // 프로세스 다이어그램
