@@ -976,17 +976,49 @@ document.getElementById('clear-button').addEventListener('click', function() {
 
   // “SVG 다운로드” 버튼 클릭 시 동작
 document.getElementById('download-button').addEventListener('click', function() {
-  const preview = document.getElementById('preview-container').querySelector('svg');
-  if (!preview) return alert('다운로드할 SVG가 없습니다.');
-
+  const previewContainer = document.getElementById('preview-container');
+  
+  // SVG 요소 찾기
+  let svg = previewContainer.querySelector('svg');
+  
+  if (!svg) {
+    alert('다운로드할 SVG가 없습니다. 다른 차트 유형을 선택해보세요.');
+    return;
+  }
+  
+  // SVG 복제 (원본 변경 방지)
+  let clonedSvg = svg.cloneNode(true);
+  
+  // SVG에 인라인 스타일 추가 (폰트, 색상 등 보존)
+  let styles = `
+    <style>
+      text { font-family: Arial, sans-serif; }
+      path, line, rect, circle { stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  `;
+  
+  // 네임스페이스 설정 (중요)
+  clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clonedSvg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+  
+  // viewBox 확인 및 설정
+  if (!clonedSvg.getAttribute('viewBox')) {
+    const width = clonedSvg.getAttribute('width') || '800';
+    const height = clonedSvg.getAttribute('height') || '600';
+    clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  }
+  
+  // 스타일 삽입
+  clonedSvg.innerHTML = styles + clonedSvg.innerHTML;
+  
   // SVG 문자열로 직렬화
   const serializer = new XMLSerializer();
-  const source = serializer.serializeToString(preview);
-
+  const source = serializer.serializeToString(clonedSvg);
+  
   // Blob 생성
   const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-
+  
   // 가상의 a 태그로 다운로드 트리거
   const a = document.createElement('a');
   a.href = url;
