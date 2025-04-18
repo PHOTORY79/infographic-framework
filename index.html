@@ -307,7 +307,7 @@ function renderSimpleBarChart(container, data) {
   }
 }
   
-  // 파이 차트를 SVG로 렌더링 (수정 버전)
+// 파이 차트를 SVG로 렌더링 (수정 버전)
 function renderSimplePieChart(container, data) {
   const labels = data['601'] || [];
   const values = data['701'] || [];
@@ -338,6 +338,12 @@ function renderSimplePieChart(container, data) {
   titleElement.textContent = chartTitle;
   svg.appendChild(titleElement);
   
+  // 고정 색상 배열 (HSL 대신 사용)
+  const colors = [
+    '#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8334A2',
+    '#1A73E8', '#D93025', '#F9AB00', '#1E8E3E', '#7627BB'
+  ];
+  
   // 데이터 합계 및 각도 계산
   const total = values.reduce((sum, val) => sum + (Number(val) || 0), 0);
   
@@ -364,16 +370,16 @@ function renderSimplePieChart(container, data) {
     
     const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
     
-    // 색상 계산
-    const hue = (i * 30) % 360;
-    const color = `hsl(${hue}, 70%, 60%)`;
+    // 고정 색상 배열에서 색상 선택
+    const color = colors[i % colors.length];
     
-    // 파이 조각 생성
+    // 파이 조각 생성 (인라인 스타일 추가)
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', pathData);
     path.setAttribute('fill', color);
     path.setAttribute('stroke', 'white');
     path.setAttribute('stroke-width', '1');
+    path.setAttribute('style', `fill: ${color}; fill-opacity: 1;`);
     svg.appendChild(path);
     
     // 텍스트 위치 계산 (조각 중앙)
@@ -399,13 +405,14 @@ function renderSimplePieChart(container, data) {
     // 범례 항목
     const legendY = 120 + i * 30;
     
-    // 범례 색상 표시
+    // 범례 색상 표시 (인라인 스타일 추가)
     const legendColor = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     legendColor.setAttribute('x', 500);
     legendColor.setAttribute('y', legendY);
     legendColor.setAttribute('width', '20');
     legendColor.setAttribute('height', '20');
     legendColor.setAttribute('fill', color);
+    legendColor.setAttribute('style', `fill: ${color}; fill-opacity: 1;`);
     svg.appendChild(legendColor);
     
     // 범례 레이블
