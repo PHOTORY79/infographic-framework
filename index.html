@@ -1375,7 +1375,7 @@ document.getElementById('clear-button').addEventListener('click', function() {
   if (dl) dl.disabled = true;
 });
 
-  // “SVG 다운로드” 버튼 클릭 시 동작
+// "SVG 다운로드" 버튼 클릭 시 동작
 document.getElementById('download-button').addEventListener('click', function() {
   const previewContainer = document.getElementById('preview-container');
   
@@ -1390,13 +1390,29 @@ document.getElementById('download-button').addEventListener('click', function() 
   // SVG 복제 (원본 변경 방지)
   let clonedSvg = svg.cloneNode(true);
   
-  // SVG에 인라인 스타일 추가 (폰트, 색상 등 보존)
+  // SVG에 인라인 스타일 추가 (더 명시적인 스타일)
   let styles = `
-    <style>
-      text { font-family: Arial, sans-serif; }
-      path, line, rect, circle { stroke-linecap: round; stroke-linejoin: round; }
-    </style>
+    <defs>
+      <style>
+        text { font-family: Arial, sans-serif; fill: #000000; }
+        path { stroke-linecap: round; stroke-linejoin: round; }
+        rect { stroke-linecap: round; stroke-linejoin: round; }
+        circle { stroke-linecap: round; stroke-linejoin: round; }
+        line { stroke-linecap: round; stroke-linejoin: round; }
+      </style>
+    </defs>
   `;
+  
+  // 모든 색상 속성을 명시적으로 설정
+  const colorElements = clonedSvg.querySelectorAll('[fill]');
+  colorElements.forEach(el => {
+    const fillColor = el.getAttribute('fill');
+    if (fillColor && fillColor !== 'none') {
+      el.setAttribute('fill', fillColor);
+      // 명시적으로 색상을 유지하는 속성 추가
+      el.setAttribute('style', `fill: ${fillColor}; fill-opacity: 1;`);
+    }
+  });
   
   // 네임스페이스 설정 (중요)
   clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
