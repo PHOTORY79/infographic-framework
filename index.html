@@ -973,6 +973,30 @@ document.getElementById('clear-button').addEventListener('click', function() {
   const dl = document.getElementById('download-button');
   if (dl) dl.disabled = true;
 });
+
+  // “SVG 다운로드” 버튼 클릭 시 동작
+document.getElementById('download-button').addEventListener('click', function() {
+  const preview = document.getElementById('preview-container').querySelector('svg');
+  if (!preview) return alert('다운로드할 SVG가 없습니다.');
+
+  // SVG 문자열로 직렬화
+  const serializer = new XMLSerializer();
+  const source = serializer.serializeToString(preview);
+
+  // Blob 생성
+  const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  // 가상의 a 태그로 다운로드 트리거
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'infographic.svg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
 </script>
   
 </body>
