@@ -1495,7 +1495,7 @@ function renderSimpleRadarChart(container, data) {
   }
 }
   
-  // 인포그래픽 생성 버튼에 이벤트 리스너 연결
+ // 인포그래픽 생성 버튼에 이벤트 리스너 연결
   document.getElementById('generate-button').addEventListener('click', function() {
     console.log('인포그래픽 생성 버튼 클릭됨');
     
@@ -1503,15 +1503,21 @@ function renderSimpleRadarChart(container, data) {
       // CSV 데이터 가져오기
       const csvInput = document.getElementById('csv-input');
       const csvText = csvInput.value;
-      console.log('CSV 데이터 길이:', csvText.length);
+      console.log('CSV 데이터:', csvText); // CSV 내용 확인
       
       // CSV 파싱
       const parseResult = parseCSVData(csvText);
       const data = parseResult.data;
       
+      // 레이아웃 값 확인 로그 추가
+      console.log('레이아웃 설정:', data['301']);
+      console.log('시각화 유형:', data['101']);
+      
       // 미리보기 컨테이너 가져오기
       const previewContainer = document.getElementById('preview-container');
-      console.log('미리보기 컨테이너 찾음:', !!previewContainer);
+      
+      // 기존 내용 제거 (메모리 누수 방지)
+      previewContainer.innerHTML = '';
       
       // 인포그래픽 렌더링
       renderSimpleChart(previewContainer, data);
