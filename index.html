@@ -803,22 +803,33 @@ function renderSimpleLineChart(container, data) {
       const topMargin = isEven ? '80px' : '30px';
       const bottomMargin = isEven ? '30px' : '80px';
       
-      html += `
+     html += `
       <div style="flex: 1; max-width: ${100/events.length}%; min-width: 100px; display: flex; flex-direction: column; align-items: center;">
-        <div style="margin-bottom: ${isEven ? '80px' : '30px'}; text-align: center; ${isEven ? '' : 'margin-top: 80px'}">
-          <div style="font-weight: bold; color: ${color};">${title}</div>
-          <div style="font-size: 12px; max-width: 150px; margin-top: 5px;">
-            ${description.length > 25 ? description.substring(0, 25) + '...' : description}
+        ${isEven ? `
+          <div style="margin-bottom: 70px; text-align: center;">
+            <div style="font-weight: bold; color: ${color};">${title}</div>
+            <div style="font-size: 12px; max-width: 150px; margin-top: 5px;">
+              ${description.length > 25 ? description.substring(0, 25) + '...' : description}
+            </div>
           </div>
-        </div>
-          
-          <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${color}; margin: 0; z-index: 2; position: relative; ${isEven ? 'top: -10px' : 'bottom: -10px'}"></div>
-          
-          <div style="text-align: center; margin-${isEven ? 'top' : 'bottom'}: 5px; font-weight: bold; font-size: 12px;">
+          <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${color}; margin: 0; z-index: 2;"></div>
+          <div style="text-align: center; margin-top: 5px; font-weight: bold; font-size: 12px;">
             ${event}
           </div>
-        </div>
-      `;
+        ` : `
+          <div style="text-align: center; margin-bottom: 5px; font-weight: bold; font-size: 12px;">
+            ${event}
+          </div>
+          <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${color}; margin: 0; z-index: 2;"></div>
+          <div style="margin-top: 70px; text-align: center;">
+            <div style="font-weight: bold; color: ${color};">${title}</div>
+            <div style="font-size: 12px; max-width: 150px; margin-top: 5px;">
+              ${description.length > 25 ? description.substring(0, 25) + '...' : description}
+            </div>
+          </div>
+        `}
+      </div>
+    `;
     });
     
     html += '</div></div>';
