@@ -849,6 +849,16 @@ function renderSimpleLineChart(container, data) {
   const allValues = [...dataset1];
   if (hasSecondDataset) allValues.push(...dataset2);
   const maxValue = Math.max(...allValues.map(v => Number(v) || 0));
+
+   // 변수 선언 후 콘솔 로그 추가
+  console.log('레이더 차트 데이터:', {
+    labels,
+    dataset1,
+    dataset2,
+    hasSecondDataset,
+    seriesLabels,
+    maxValue    // 이 항목까지 함께 찍으면 더 좋습니다.
+  });
   
   const chartDiv = document.createElement('div');
   chartDiv.style.width = '100%';
