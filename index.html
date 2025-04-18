@@ -1470,11 +1470,11 @@ function renderSimpleRadarChart(container, data) {
   }
   
   // 첫 번째 데이터셋 폴리곤 그리기
-  drawDataPolygon(dataset1, "#4285F4", 0.6);
+  drawDataPolygon(dataset1, getPaletteColor(0), 0.6);
   
   // 두 번째 데이터셋이 있으면 그리기
   if (hasSecondDataset) {
-    drawDataPolygon(dataset2, "#EA4335", 0.6);
+    drawDataPolygon(dataset2, getPaletteColor(1), 0.6);
   }
   
   // 범례 추가
@@ -1487,9 +1487,9 @@ function renderSimpleRadarChart(container, data) {
   legendRect1.setAttribute('y', '0');
   legendRect1.setAttribute('width', '15');
   legendRect1.setAttribute('height', '15');
-  legendRect1.setAttribute('fill', '#4285F4');
+  legendRect1.setAttribute('fill', getPaletteColor(0));
   legendRect1.setAttribute('fill-opacity', '0.6');
-  legendRect1.setAttribute('style', 'fill: #4285F4; fill-opacity: 0.6;');
+  legendRect1.setAttribute('style', \fill: ${getPaletteColor(0)}; fill-opacity: 0.6;`);`
   legendGroup.appendChild(legendRect1);
   
   const legendText1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -1506,9 +1506,9 @@ function renderSimpleRadarChart(container, data) {
     legendRect2.setAttribute('y', '0');
     legendRect2.setAttribute('width', '15');
     legendRect2.setAttribute('height', '15');
-    legendRect2.setAttribute('fill', '#EA4335');
+    legendRect2.setAttribute('fill', getPaletteColor(1));
     legendRect2.setAttribute('fill-opacity', '0.6');
-    legendRect2.setAttribute('style', 'fill: #EA4335; fill-opacity: 0.6;');
+    legendRect2.setAttribute('style', \fill: ${getPaletteColor(1)}; fill-opacity: 0.6;`);`
     legendGroup.appendChild(legendRect2);
     
     const legendText2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
