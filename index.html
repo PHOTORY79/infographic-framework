@@ -119,8 +119,7 @@
 <!-- 디버깅 스크립트 추가 -->
 
 <script>
-window.addEventListener('load', function() {
-  // ─── 공통 색상 팔레트 함수 (새로 추가) ───
+    // ─── 공통 색상 팔레트 함수 (새로 추가) ───
 function getColorScheme(key) {
   const palettes = {
     corporate: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368'],
@@ -131,7 +130,12 @@ function getColorScheme(key) {
   key = (key || 'corporate').toLowerCase().replace(/\s+/g, '');
   return palettes[key] || palettes['corporate'];
 }
-
+// ─── 팔레트에서 n번째 색을 돌려주는 헬퍼 ───
+function getPaletteColor(index, schemeKey = 'corporate') {
+  const palette = getColorScheme(schemeKey);
+  return palette[index % palette.length];
+}
+window.addEventListener('load', function() {
   console.log('페이지 로드 완료');
   
   // CSV 파싱 함수 직접 구현
