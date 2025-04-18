@@ -120,6 +120,18 @@
 
 <script>
 window.addEventListener('load', function() {
+  // ─── 공통 색상 팔레트 함수 (새로 추가) ───
+function getColorScheme(key) {
+  const palettes = {
+    corporate: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368'],
+    vibrant:   ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#F5FF33'],
+    monochromatic: ['#333333', '#555555', '#777777', '#999999', '#BBBBBB']
+    // 필요하면 계속 추가
+  };
+  key = (key || 'corporate').toLowerCase().replace(/\s+/g, '');
+  return palettes[key] || palettes['corporate'];
+}
+
   console.log('페이지 로드 완료');
   
   // CSV 파싱 함수 직접 구현
@@ -208,7 +220,6 @@ window.addEventListener('load', function() {
     }
   }
 
- // 막대 차트를 SVG로 렌더링
 // 막대 차트를 SVG로 렌더링 (방향 지원 추가)
 function renderSimpleBarChart(container, data) {
   const xLabels = data['601'] || [];
@@ -409,11 +420,12 @@ function renderSimplePieChart(container, data) {
   svg.appendChild(titleElement);
   
   // 고정 색상 배열 (HSL 대신 사용)
-  const colors = [
-    '#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8334A2',
-    '#1A73E8', '#D93025', '#F9AB00', '#1E8E3E', '#7627BB'
-  ];
-  
+ // const colors = [
+ //  '#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8334A2',
+ // '#1A73E8', '#D93025', '#F9AB00', '#1E8E3E', '#7627BB'
+ // ]; 
+  const colors = getColorScheme(data['302']);
+
   // 데이터 합계 및 각도 계산
   const total = values.reduce((sum, val) => sum + (Number(val) || 0), 0);
   
@@ -505,6 +517,12 @@ function renderSimpleLineChart(container, data) {
   const hasSecondDataset = Array.isArray(dataset2) && dataset2.length > 0;
   const seriesLabels = data['603'] || ['시리즈 1', '시리즈 2'];
   const chartTitle = data['401'] || '라인 차트';
+  
+  // 데이터의 302(색상 스키마) 값을 받아 팔레트 얻기
+  const colors = getColorScheme(data['302']);
+  const primaryColor   = colors[0] || '#4285F4';   // 첫 번째 시리즈용
+  const secondaryColor = colors[1] || '#EA4335';   // 두 번째 시리즈용
+
   
   // 컨테이너 초기화
   container.innerHTML = '';
@@ -611,9 +629,9 @@ function renderSimpleLineChart(container, data) {
   
   linePath1.setAttribute('d', path1Data);
   linePath1.setAttribute('fill', 'none');
-  linePath1.setAttribute('stroke', '#4285F4');
+  linePath1.setAttribute('stroke', primaryColor);
   linePath1.setAttribute('stroke-width', '2');
-  linePath1.setAttribute('style', 'stroke: #4285F4; stroke-opacity: 1;');
+  linePath1.setAttribute('style', `stroke: ${primaryColor}; stroke-opacity: 1;`);
   svg.appendChild(linePath1);
   
   // 첫 번째 데이터셋 포인트
@@ -629,8 +647,8 @@ function renderSimpleLineChart(container, data) {
     circle.setAttribute('cx', x);
     circle.setAttribute('cy', y);
     circle.setAttribute('r', '4');
-    circle.setAttribute('fill', '#4285F4');
-    circle.setAttribute('style', 'fill: #4285F4; fill-opacity: 1;');
+    circle.setAttribute('fill', primaryColor);
+    circle.setAttribute('style', `fill: ${primaryColor}; fill-opacity: 1;`);
     svg.appendChild(circle);
     
     const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -660,9 +678,9 @@ function renderSimpleLineChart(container, data) {
     
     linePath2.setAttribute('d', path2Data);
     linePath2.setAttribute('fill', 'none');
-    linePath2.setAttribute('stroke', '#EA4335');
+    linePath2.setAttribute('stroke', secondaryColor);
     linePath2.setAttribute('stroke-width', '2');
-    linePath2.setAttribute('style', 'stroke: #EA4335; stroke-opacity: 1;');
+    linePath2.setAttribute('style', `stroke: ${secondaryColor}; stroke-opacity: 1;`);
     svg.appendChild(linePath2);
     
     // 두 번째 데이터셋 포인트
@@ -678,8 +696,8 @@ function renderSimpleLineChart(container, data) {
       circle.setAttribute('cx', x);
       circle.setAttribute('cy', y);
       circle.setAttribute('r', '4');
-      circle.setAttribute('fill', '#EA4335');
-      circle.setAttribute('style', 'fill: #EA4335; fill-opacity: 1;');
+      circle.setAttribute('fill', secondaryColor);
+      circle.setAttribute('style', `fill: ${secondaryColor}; fill-opacity: 1;`);
       svg.appendChild(circle);
       
       const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -702,7 +720,7 @@ function renderSimpleLineChart(container, data) {
   legendLine1.setAttribute('y1', 0);
   legendLine1.setAttribute('x2', 30);
   legendLine1.setAttribute('y2', 0);
-  legendLine1.setAttribute('stroke', '#4285F4');
+  legendLine1.setAttribute('stroke', primaryColor);
   legendLine1.setAttribute('stroke-width', '2');
   legendGroup.appendChild(legendLine1);
   
@@ -710,7 +728,7 @@ function renderSimpleLineChart(container, data) {
   legendCircle1.setAttribute('cx', 15);
   legendCircle1.setAttribute('cy', 0);
   legendCircle1.setAttribute('r', '3');
-  legendCircle1.setAttribute('fill', '#4285F4');
+  legendCircle1.setAttribute('fill', primaryColor);
   legendGroup.appendChild(legendCircle1);
   
   const legendText1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -727,7 +745,7 @@ function renderSimpleLineChart(container, data) {
     legendLine2.setAttribute('y1', 0);
     legendLine2.setAttribute('x2', 130);
     legendLine2.setAttribute('y2', 0);
-    legendLine2.setAttribute('stroke', '#EA4335');
+    legendLine2.setAttribute('stroke', secondaryColor);
     legendLine2.setAttribute('stroke-width', '2');
     legendGroup.appendChild(legendLine2);
     
@@ -735,7 +753,7 @@ function renderSimpleLineChart(container, data) {
     legendCircle2.setAttribute('cx', 115);
     legendCircle2.setAttribute('cy', 0);
     legendCircle2.setAttribute('r', '3');
-    legendCircle2.setAttribute('fill', '#EA4335');
+    legendCircle2.setAttribute('fill', secondaryColor);
     legendGroup.appendChild(legendCircle2);
     
     const legendText2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
