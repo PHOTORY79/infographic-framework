@@ -231,6 +231,7 @@ function renderSimpleBarChart(container, data) {
   const dataset = data['701'] || [];
   const chartTitle = data['401'] || '막대 차트';
   const isHorizontal = data['301'] && data['301'].toLowerCase().includes('horizontal');
+  const scheme = getColorScheme(data['302']);
   
   console.log('바차트 방향:', isHorizontal ? '수평' : '수직');
   
@@ -307,7 +308,7 @@ function renderSimpleBarChart(container, data) {
       bar.setAttribute('y', y);
       bar.setAttribute('width', width);
       bar.setAttribute('height', barHeight);
-      bar.setAttribute('fill', '#4285F4');
+      bar.setAttribute('fill', scheme[i % scheme.length]);
       svg.appendChild(bar);
       
       // 값 라벨 추가
@@ -369,7 +370,7 @@ function renderSimpleBarChart(container, data) {
       bar.setAttribute('y', y);
       bar.setAttribute('width', barWidth);
       bar.setAttribute('height', height);
-      bar.setAttribute('fill', '#4285F4');
+      bar.setAttribute('fill', scheme[i % scheme.length]);
       svg.appendChild(bar);
       
       // 값 라벨 추가
