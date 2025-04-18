@@ -1549,6 +1549,7 @@ document.getElementById('clear-button').addEventListener('click', function() {
 });
 
 // "SVG 다운로드" 버튼 클릭 시 동작
+// "SVG 다운로드" 버튼 클릭 시 동작
 document.getElementById('download-button').addEventListener('click', function() {
   const previewContainer = document.getElementById('preview-container');
   
@@ -1576,14 +1577,52 @@ document.getElementById('download-button').addEventListener('click', function() 
     </defs>
   `;
   
-  // 모든 색상 속성을 명시적으로 설정
-  const colorElements = clonedSvg.querySelectorAll('[fill]');
-  colorElements.forEach(el => {
+  // 모든 투명도 속성을 명시적으로 설정
+  // 경로(path) 요소 처리 (레이더 차트, 파이 차트 등)
+  const pathElements = clonedSvg.querySelectorAll('path');
+  pathElements.forEach(el => {
     const fillColor = el.getAttribute('fill');
     if (fillColor && fillColor !== 'none') {
+      // 기존 투명도 값 가져오기 (없으면 기본값 사용)
+      let opacity = el.getAttribute('fill-opacity') || '1';
+      
+      // 레이더 차트 폴리곤 여부 확인 (투명도가 필요한지 판단)
+      if (el.hasAttribute('stroke') && el.getAttribute('stroke-width') === '2') {
+        // 레이더 차트 폴리곤으로 추정
+        opacity = '0.6';
+      }
+      
+      // 인라인 스타일과 속성 모두 설정
       el.setAttribute('fill', fillColor);
-      // 명시적으로 색상을 유지하는 속성 추가
-      el.setAttribute('style', `fill: ${fillColor}; fill-opacity: 1;`);
+      el.setAttribute('fill-opacity', opacity);
+      el.setAttribute('style', `fill: ${fillColor}; fill-opacity: ${opacity};`);
+    }
+    
+    // 선 색상도 처리
+    const strokeColor = el.getAttribute('stroke');
+    if (strokeColor && strokeColor !== 'none') {
+      el.setAttribute('style', (el.getAttribute('style') || '') + ` stroke: ${strokeColor};`);
+    }
+  });
+  
+  // 사각형(rect) 요소 처리 (범례 등)
+  const rectElements = clonedSvg.querySelectorAll('rect');
+  rectElements.forEach(el => {
+    const fillColor = el.getAttribute('fill');
+    if (fillColor && fillColor !== 'none') {
+      // 기존 투명도 값 가져오기 (없으면 기본값 사용)
+      let opacity = el.getAttribute('fill-opacity') || '1';
+      
+      // 레이더 차트 범례 여부 확인
+      if (opacity !== '1' || el.getAttribute('width') === '15' && el.getAttribute('height') === '15') {
+        // 범례로 추정, 투명도 명시적 설정
+        opacity = opacity || '0.6';
+      }
+      
+      // 인라인 스타일과 속성 모두 설정
+      el.setAttribute('fill', fillColor);
+      el.setAttribute('fill-opacity', opacity);
+      el.setAttribute('style', `fill: ${fillColor}; fill-opacity: ${opacity};`);
     }
   });
   
