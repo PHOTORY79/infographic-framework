@@ -434,12 +434,36 @@ function renderSimpleLineChart(container, data) {
   const dataset2 = data['702'] || [];
   const hasSecondDataset = Array.isArray(dataset2) && dataset2.length > 0;
   const seriesLabels = data['603'] || ['시리즈 1', '시리즈 2'];
+  const chartTitle = data['401'] || '라인 차트';
   
-  // 차트 컨테이너 생성
-  const chartDiv = document.createElement('div');
-  chartDiv.style.width = '100%';
-  chartDiv.style.padding = '20px';
-  container.appendChild(chartDiv);
+  // 컨테이너 초기화
+  container.innerHTML = '';
+  
+  // SVG 생성
+  const svgWidth = 800;
+  const svgHeight = 400;
+  const paddingX = 50;
+  const paddingY = 50;
+  const chartWidth = svgWidth - 2 * paddingX;
+  const chartHeight = svgHeight - 2 * paddingY;
+  
+  // SVG 요소 생성
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', svgHeight);
+  svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  container.appendChild(svg);
+  
+  // 제목 추가
+  const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  titleElement.setAttribute('x', svgWidth / 2);
+  titleElement.setAttribute('y', 30);
+  titleElement.setAttribute('text-anchor', 'middle');
+  titleElement.setAttribute('font-size', '20');
+  titleElement.setAttribute('font-weight', 'bold');
+  titleElement.textContent = chartTitle;
+  svg.appendChild(titleElement);
   
   // 데이터 값 범위 계산
   const allValues = [...dataset];
@@ -450,18 +474,6 @@ function renderSimpleLineChart(container, data) {
   let maxValue = Math.max(...allValues.map(v => Number(v) || 0));
   maxValue = Math.ceil(maxValue * 1.1); // 약간의 여유 공간
   
-  // SVG 생성
-  const svgWidth = 800;
-  const svgHeight = 400;
-  const paddingX = 50;
-  const paddingY = 50;
-  const chartWidth = svgWidth - 2 * paddingX;
-  const chartHeight = svgHeight - 2 * paddingY;
-  
-  let svgHTML = `
-    <svg width="100%" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
-  `;
-  
   // 그리드 라인 및 Y축 레이블
   const gridLines = 5;
   for (let i = 0; i <= gridLines; i++) {
@@ -469,35 +481,53 @@ function renderSimpleLineChart(container, data) {
     const value = minValue + (i / gridLines) * (maxValue - minValue);
     
     // 그리드 라인
-    svgHTML += `
-      <line x1="${paddingX}" y1="${y}" x2="${paddingX + chartWidth}" y2="${y}" 
-            stroke="#e0e0e0" stroke-width="1" />
-      
-      <!-- Y축 레이블 -->
-      <text x="${paddingX - 10}" y="${y}" text-anchor="end" alignment-baseline="middle" 
-            font-size="12">${Math.round(value)}</text>
-    `;
+    const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    gridLine.setAttribute('x1', paddingX);
+    gridLine.setAttribute('y1', y);
+    gridLine.setAttribute('x2', paddingX + chartWidth);
+    gridLine.setAttribute('y2', y);
+    gridLine.setAttribute('stroke', '#e0e0e0');
+    gridLine.setAttribute('stroke-width', '1');
+    svg.appendChild(gridLine);
+    
+    // Y축 레이블
+    const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    yLabel.setAttribute('x', paddingX - 10);
+    yLabel.setAttribute('y', y);
+    yLabel.setAttribute('text-anchor', 'end');
+    yLabel.setAttribute('alignment-baseline', 'middle');
+    yLabel.setAttribute('font-size', '12');
+    yLabel.textContent = Math.round(value);
+    svg.appendChild(yLabel);
   }
   
   // X축 라인
-  svgHTML += `
-    <line x1="${paddingX}" y1="${paddingY + chartHeight}" 
-          x2="${paddingX + chartWidth}" y2="${paddingY + chartHeight}" 
-          stroke="#333" stroke-width="1" />
-  `;
+  const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  xAxis.setAttribute('x1', paddingX);
+  xAxis.setAttribute('y1', paddingY + chartHeight);
+  xAxis.setAttribute('x2', paddingX + chartWidth);
+  xAxis.setAttribute('y2', paddingY + chartHeight);
+  xAxis.setAttribute('stroke', '#333');
+  xAxis.setAttribute('stroke-width', '1');
+  svg.appendChild(xAxis);
   
   // X축 레이블
-  const xStep = chartWidth / (xLabels.length - 1);
+  const xStep = chartWidth / (xLabels.length - 1 || 1);
   xLabels.forEach((label, i) => {
     const x = paddingX + i * xStep;
-    svgHTML += `
-      <text x="${x}" y="${paddingY + chartHeight + 20}" 
-            text-anchor="middle" font-size="12">${label}</text>
-    `;
+    const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    xLabel.setAttribute('x', x);
+    xLabel.setAttribute('y', paddingY + chartHeight + 20);
+    xLabel.setAttribute('text-anchor', 'middle');
+    xLabel.setAttribute('font-size', '12');
+    xLabel.textContent = label;
+    svg.appendChild(xLabel);
   });
   
   // 첫 번째 데이터셋 라인
-  let linePath = `M `;
+  const linePath1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  let path1Data = '';
+  
   dataset.forEach((value, i) => {
     if (i >= xLabels.length) return;
     
@@ -506,12 +536,15 @@ function renderSimpleLineChart(container, data) {
     const normalizedValue = (yValue - minValue) / (maxValue - minValue);
     const y = paddingY + chartHeight - (normalizedValue * chartHeight);
     
-    linePath += `${i === 0 ? '' : 'L '}${x} ${y} `;
+    path1Data += `${i === 0 ? 'M' : 'L'} ${x} ${y} `;
   });
   
-  svgHTML += `
-    <path d="${linePath}" fill="none" stroke="#4285F4" stroke-width="2" />
-  `;
+  linePath1.setAttribute('d', path1Data);
+  linePath1.setAttribute('fill', 'none');
+  linePath1.setAttribute('stroke', '#4285F4');
+  linePath1.setAttribute('stroke-width', '2');
+  linePath1.setAttribute('style', 'stroke: #4285F4; stroke-opacity: 1;');
+  svg.appendChild(linePath1);
   
   // 첫 번째 데이터셋 포인트
   dataset.forEach((value, i) => {
@@ -522,15 +555,28 @@ function renderSimpleLineChart(container, data) {
     const normalizedValue = (yValue - minValue) / (maxValue - minValue);
     const y = paddingY + chartHeight - (normalizedValue * chartHeight);
     
-    svgHTML += `
-      <circle cx="${x}" cy="${y}" r="4" fill="#4285F4" />
-      <text x="${x}" y="${y - 10}" text-anchor="middle" font-size="10">${value}</text>
-    `;
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', x);
+    circle.setAttribute('cy', y);
+    circle.setAttribute('r', '4');
+    circle.setAttribute('fill', '#4285F4');
+    circle.setAttribute('style', 'fill: #4285F4; fill-opacity: 1;');
+    svg.appendChild(circle);
+    
+    const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    valueText.setAttribute('x', x);
+    valueText.setAttribute('y', y - 10);
+    valueText.setAttribute('text-anchor', 'middle');
+    valueText.setAttribute('font-size', '10');
+    valueText.textContent = value;
+    svg.appendChild(valueText);
   });
   
   // 두 번째 데이터셋 (있을 경우)
   if (hasSecondDataset) {
-    let linePath2 = `M `;
+    const linePath2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    let path2Data = '';
+    
     dataset2.forEach((value, i) => {
       if (i >= xLabels.length) return;
       
@@ -539,12 +585,15 @@ function renderSimpleLineChart(container, data) {
       const normalizedValue = (yValue - minValue) / (maxValue - minValue);
       const y = paddingY + chartHeight - (normalizedValue * chartHeight);
       
-      linePath2 += `${i === 0 ? '' : 'L '}${x} ${y} `;
+      path2Data += `${i === 0 ? 'M' : 'L'} ${x} ${y} `;
     });
     
-    svgHTML += `
-      <path d="${linePath2}" fill="none" stroke="#EA4335" stroke-width="2" />
-    `;
+    linePath2.setAttribute('d', path2Data);
+    linePath2.setAttribute('fill', 'none');
+    linePath2.setAttribute('stroke', '#EA4335');
+    linePath2.setAttribute('stroke-width', '2');
+    linePath2.setAttribute('style', 'stroke: #EA4335; stroke-opacity: 1;');
+    svg.appendChild(linePath2);
     
     // 두 번째 데이터셋 포인트
     dataset2.forEach((value, i) => {
@@ -555,41 +604,79 @@ function renderSimpleLineChart(container, data) {
       const normalizedValue = (yValue - minValue) / (maxValue - minValue);
       const y = paddingY + chartHeight - (normalizedValue * chartHeight);
       
-      svgHTML += `
-        <circle cx="${x}" cy="${y}" r="4" fill="#EA4335" />
-        <text x="${x}" y="${y - 10}" text-anchor="middle" font-size="10">${value}</text>
-      `;
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x);
+      circle.setAttribute('cy', y);
+      circle.setAttribute('r', '4');
+      circle.setAttribute('fill', '#EA4335');
+      circle.setAttribute('style', 'fill: #EA4335; fill-opacity: 1;');
+      svg.appendChild(circle);
+      
+      const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      valueText.setAttribute('x', x);
+      valueText.setAttribute('y', y - 10);
+      valueText.setAttribute('text-anchor', 'middle');
+      valueText.setAttribute('font-size', '10');
+      valueText.textContent = value;
+      svg.appendChild(valueText);
     });
   }
   
   // 범례
+  const legendGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  legendGroup.setAttribute('transform', `translate(${svgWidth - 200}, 40)`);
+  
+  // 첫 번째 시리즈 범례
+  const legendLine1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  legendLine1.setAttribute('x1', 0);
+  legendLine1.setAttribute('y1', 0);
+  legendLine1.setAttribute('x2', 30);
+  legendLine1.setAttribute('y2', 0);
+  legendLine1.setAttribute('stroke', '#4285F4');
+  legendLine1.setAttribute('stroke-width', '2');
+  legendGroup.appendChild(legendLine1);
+  
+  const legendCircle1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  legendCircle1.setAttribute('cx', 15);
+  legendCircle1.setAttribute('cy', 0);
+  legendCircle1.setAttribute('r', '3');
+  legendCircle1.setAttribute('fill', '#4285F4');
+  legendGroup.appendChild(legendCircle1);
+  
+  const legendText1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  legendText1.setAttribute('x', 40);
+  legendText1.setAttribute('y', 5);
+  legendText1.setAttribute('font-size', '12');
+  legendText1.textContent = seriesLabels[0];
+  legendGroup.appendChild(legendText1);
+  
   if (hasSecondDataset) {
-    const legendY = 30;
-    svgHTML += `
-      <!-- 첫 번째 시리즈 범례 -->
-      <line x1="${svgWidth - 200}" y1="${legendY}" x2="${svgWidth - 170}" y2="${legendY}" 
-            stroke="#4285F4" stroke-width="2" />
-      <circle cx="${svgWidth - 185}" cy="${legendY}" r="3" fill="#4285F4" />
-      <text x="${svgWidth - 160}" y="${legendY + 5}" font-size="12">${seriesLabels[0]}</text>
-      
-      <!-- 두 번째 시리즈 범례 -->
-      <line x1="${svgWidth - 100}" y1="${legendY}" x2="${svgWidth - 70}" y2="${legendY}" 
-            stroke="#EA4335" stroke-width="2" />
-      <circle cx="${svgWidth - 85}" cy="${legendY}" r="3" fill="#EA4335" />
-      <text x="${svgWidth - 60}" y="${legendY + 5}" font-size="12">${seriesLabels[1]}</text>
-    `;
-  } else {
-    svgHTML += `
-      <!-- 단일 시리즈 범례 -->
-      <line x1="${svgWidth - 150}" y1="30" x2="${svgWidth - 120}" y2="30" 
-            stroke="#4285F4" stroke-width="2" />
-      <circle cx="${svgWidth - 135}" cy="30" r="3" fill="#4285F4" />
-      <text x="${svgWidth - 110}" y="35" font-size="12">${seriesLabels[0]}</text>
-    `;
+    // 두 번째 시리즈 범례
+    const legendLine2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    legendLine2.setAttribute('x1', 100);
+    legendLine2.setAttribute('y1', 0);
+    legendLine2.setAttribute('x2', 130);
+    legendLine2.setAttribute('y2', 0);
+    legendLine2.setAttribute('stroke', '#EA4335');
+    legendLine2.setAttribute('stroke-width', '2');
+    legendGroup.appendChild(legendLine2);
+    
+    const legendCircle2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    legendCircle2.setAttribute('cx', 115);
+    legendCircle2.setAttribute('cy', 0);
+    legendCircle2.setAttribute('r', '3');
+    legendCircle2.setAttribute('fill', '#EA4335');
+    legendGroup.appendChild(legendCircle2);
+    
+    const legendText2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    legendText2.setAttribute('x', 140);
+    legendText2.setAttribute('y', 5);
+    legendText2.setAttribute('font-size', '12');
+    legendText2.textContent = seriesLabels[1];
+    legendGroup.appendChild(legendText2);
   }
   
-  svgHTML += '</svg>';
-  chartDiv.innerHTML = svgHTML;
+  svg.appendChild(legendGroup);
 }
 
   // 비교 차트를 SVG로 렌더링
