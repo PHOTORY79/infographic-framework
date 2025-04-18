@@ -209,43 +209,103 @@ window.addEventListener('load', function() {
   }
 
   // 간단한 막대 차트 렌더링
-  function renderSimpleBarChart(container, data) {
+ // 막대 차트를 SVG로 렌더링
+function renderSimpleBarChart(container, data) {
   const xLabels = data['601'] || [];
   const dataset = data['701'] || [];
+  const chartTitle = data['401'] || '막대 차트';
   
-  // 간단한 막대 차트 컨테이너 생성
-  const chartDiv = document.createElement('div');
-  chartDiv.style.width = '100%';
-  chartDiv.style.height = '400px';
-  chartDiv.style.padding = '20px';
-  container.appendChild(chartDiv);
+  // 차트 컨테이너 생성 (DIV 대신 SVG 사용)
+  container.innerHTML = '';
   
-  // 차트 HTML 생성
-  let chartHTML = `
-    <div style="height: 350px; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 40px; border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; position: relative;">
-  `;
+  // SVG 생성
+  const svgWidth = 800;
+  const svgHeight = 500;
+  const paddingX = 60;
+  const paddingY = 80;
+  const chartWidth = svgWidth - 2 * paddingX;
+  const chartHeight = svgHeight - 2 * paddingY;
+  
+  // SVG 요소 생성
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', svgHeight);
+  svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  container.appendChild(svg);
+  
+  // 제목 추가
+  const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  titleElement.setAttribute('x', svgWidth / 2);
+  titleElement.setAttribute('y', 30);
+  titleElement.setAttribute('text-anchor', 'middle');
+  titleElement.setAttribute('font-size', '20');
+  titleElement.setAttribute('font-weight', 'bold');
+  titleElement.textContent = chartTitle;
+  svg.appendChild(titleElement);
   
   // 최대값 계산
   const maxValue = Math.max(...dataset.map(v => Number(v) || 0));
   const values = dataset.map(v => Number(v) || 0);
   
+  // X축 추가
+  const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  xAxis.setAttribute('x1', paddingX);
+  xAxis.setAttribute('y1', svgHeight - paddingY);
+  xAxis.setAttribute('x2', svgWidth - paddingX);
+  xAxis.setAttribute('y2', svgHeight - paddingY);
+  xAxis.setAttribute('stroke', '#333');
+  xAxis.setAttribute('stroke-width', '2');
+  svg.appendChild(xAxis);
+  
+  // Y축 추가
+  const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  yAxis.setAttribute('x1', paddingX);
+  yAxis.setAttribute('y1', paddingY);
+  yAxis.setAttribute('x2', paddingX);
+  yAxis.setAttribute('y2', svgHeight - paddingY);
+  yAxis.setAttribute('stroke', '#333');
+  yAxis.setAttribute('stroke-width', '2');
+  svg.appendChild(yAxis);
+  
+  // 막대 너비 계산
+  const barWidth = chartWidth / xLabels.length / 2;
+  const barSpacing = chartWidth / xLabels.length;
+  
   // 막대 생성
   for (let i = 0; i < Math.min(xLabels.length, values.length); i++) {
     const value = values[i];
-    const height = Math.round((value / maxValue) * 300); // 최대 높이 300px
+    const height = (value / maxValue) * chartHeight;
+    const x = paddingX + i * barSpacing + barWidth / 2;
+    const y = svgHeight - paddingY - height;
     
-    chartHTML += `
-      <div style="display: flex; flex-direction: column; align-items: center; width: ${100 / xLabels.length}%;">
-        <div style="height: ${height}px; width: 40px; background-color: #4285F4; margin-bottom: 5px; position: relative; text-align: center;">
-          <div style="position: absolute; top: -25px; width: 100%; text-align: center;">${value}</div>
-        </div>
-        <div>${xLabels[i]}</div>
-      </div>
-    `;
+    // 막대 추가
+    const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bar.setAttribute('x', x);
+    bar.setAttribute('y', y);
+    bar.setAttribute('width', barWidth);
+    bar.setAttribute('height', height);
+    bar.setAttribute('fill', '#4285F4');
+    svg.appendChild(bar);
+    
+    // 값 라벨 추가
+    const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    valueText.setAttribute('x', x + barWidth / 2);
+    valueText.setAttribute('y', y - 10);
+    valueText.setAttribute('text-anchor', 'middle');
+    valueText.setAttribute('font-size', '12');
+    valueText.textContent = value;
+    svg.appendChild(valueText);
+    
+    // X축 라벨 추가
+    const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelText.setAttribute('x', x + barWidth / 2);
+    labelText.setAttribute('y', svgHeight - paddingY + 20);
+    labelText.setAttribute('text-anchor', 'middle');
+    labelText.setAttribute('font-size', '12');
+    labelText.textContent = xLabels[i];
+    svg.appendChild(labelText);
   }
-  
-  chartHTML += '</div>';
-  chartDiv.innerHTML = chartHTML;
 }
   
   // 간단한 파이 차트 렌더링
