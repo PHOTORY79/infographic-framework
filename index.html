@@ -850,15 +850,18 @@ function renderSimpleLineChart(container, data) {
   if (hasSecondDataset) allValues.push(...dataset2);
   const maxValue = Math.max(...allValues.map(v => Number(v) || 0));
 
-   // 변수 선언 후 콘솔 로그 추가
-  console.log('레이더 차트 데이터:', {
-    labels,
-    dataset1,
-    dataset2,
-    hasSecondDataset,
-    seriesLabels,
-    maxValue    // 이 항목까지 함께 찍으면 더 좋습니다.
-  });
+// → 배열 내용을 직렬화해서 모두 볼 수 있게 찍습니다.
+  console.log(
+    '레이더 차트 원시 데이터:',
+    JSON.stringify({
+      labels,
+      dataset1,
+      dataset2,
+      hasSecondDataset,
+      seriesLabels,
+      maxValue
+    }, null, 2)
+  );
   
   const chartDiv = document.createElement('div');
   chartDiv.style.width = '100%';
