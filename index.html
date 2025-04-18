@@ -898,18 +898,38 @@ function renderSimpleProcessDiagram(container, data) {
   }
 }
 
-  // 타임라인
-  function renderSimpleTimeline(container, data) {
+ // 타임라인을 SVG로 렌더링
+function renderSimpleTimeline(container, data) {
   const events = data['601'] || [];
   const titles = data['701'] || [];
   const descriptions = data['702'] || [];
   const isVertical = data['301'] && data['301'].toLowerCase().includes('vertical');
+  const chartTitle = data['401'] || '타임라인';
   
-  // 차트 컨테이너 생성
-  const chartDiv = document.createElement('div');
-  chartDiv.style.width = '100%';
-  chartDiv.style.padding = '20px';
-  container.appendChild(chartDiv);
+  // 컨테이너 초기화
+  container.innerHTML = '';
+  
+  // SVG 크기 설정
+  const svgWidth = isVertical ? 700 : Math.max(800, events.length * 150);
+  const svgHeight = isVertical ? Math.max(400, events.length * 120) : 500;
+  
+  // SVG 요소 생성
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', svgHeight);
+  svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  container.appendChild(svg);
+  
+  // 제목 추가
+  const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  titleElement.setAttribute('x', svgWidth / 2);
+  titleElement.setAttribute('y', 30);
+  titleElement.setAttribute('text-anchor', 'middle');
+  titleElement.setAttribute('font-size', '20');
+  titleElement.setAttribute('font-weight', 'bold');
+  titleElement.textContent = chartTitle;
+  svg.appendChild(titleElement);
   
   // 색상 계산 함수
   function getColor(index) {
@@ -919,83 +939,194 @@ function renderSimpleProcessDiagram(container, data) {
   
   if (isVertical) {
     // 수직 타임라인
-    let html = '<div style="display: flex; flex-direction: column; margin: 20px; position: relative;">';
+    const centerX = 150;
+    const startY = 80;
+    const itemHeight = 100;
     
     // 중앙 선
-    html += '<div style="position: absolute; left: 120px; top: 0; bottom: 0; width: 4px; background-color: #ddd;"></div>';
+    const centerLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    centerLine.setAttribute('x1', centerX);
+    centerLine.setAttribute('y1', startY);
+    centerLine.setAttribute('x2', centerX);
+    centerLine.setAttribute('y2', startY + itemHeight * events.length);
+    centerLine.setAttribute('stroke', '#ddd');
+    centerLine.setAttribute('stroke-width', '4');
+    svg.appendChild(centerLine);
     
-    events.forEach((event, index) => {
-      const title = titles[index] || '';
-      const description = descriptions[index] || '';
-      const color = getColor(index);
+    for (let i = 0; i < events.length; i++) {
+      const y = startY + i * itemHeight;
+      const color = getColor(i);
+      const isRight = i % 2 === 0; // 왼쪽/오른쪽 번갈아가며 배치
       
-      html += `
-        <div style="display: flex; margin-bottom: 30px; position: relative; z-index: 1;">
-          <div style="width: 120px; padding-right: 20px; text-align: right; font-weight: bold;">
-            ${event}
-          </div>
-          <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${color}; margin: 0 10px; z-index: 2;"></div>
-          <div style="flex: 1; background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="font-weight: bold; margin-bottom: 5px; color: ${color};">${title}</div>
-            <div style="font-size: 14px;">${description}</div>
-          </div>
-        </div>
-      `;
-    });
-    
-    html += '</div>';
-    chartDiv.innerHTML = html;
+      // 이벤트 원
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', centerX);
+      circle.setAttribute('cy', y + 20);
+      circle.setAttribute('r', '10');
+      circle.setAttribute('fill', color);
+      svg.appendChild(circle);
+      
+      // 이벤트 날짜/시간
+      const timeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      timeText.setAttribute('x', isRight ? centerX - 20 : centerX + 20);
+      timeText.setAttribute('y', y + 25);
+      timeText.setAttribute('text-anchor', isRight ? 'end' : 'start');
+      timeText.setAttribute('font-size', '14');
+      timeText.setAttribute('font-weight', 'bold');
+      timeText.textContent = events[i];
+      svg.appendChild(timeText);
+      
+      // 이벤트 내용 박스
+      const boxWidth = 250;
+      const boxHeight = 70;
+      const boxX = isRight ? centerX + 30 : centerX - 30 - boxWidth;
+      
+      const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      box.setAttribute('x', boxX);
+      box.setAttribute('y', y - 10);
+      box.setAttribute('width', boxWidth);
+      box.setAttribute('height', boxHeight);
+      box.setAttribute('rx', '5');
+      box.setAttribute('fill', '#f8f9fa');
+      box.setAttribute('stroke', color);
+      box.setAttribute('stroke-width', '2');
+      svg.appendChild(box);
+      
+      // 이벤트 제목
+      const titleText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      titleText.setAttribute('x', boxX + 10);
+      titleText.setAttribute('y', y + 15);
+      titleText.setAttribute('font-size', '14');
+      titleText.setAttribute('font-weight', 'bold');
+      titleText.setAttribute('fill', color);
+      titleText.textContent = titles[i] || '';
+      svg.appendChild(titleText);
+      
+      // 이벤트 설명
+      if (descriptions[i]) {
+        const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        descText.setAttribute('x', boxX + 10);
+        descText.setAttribute('y', y + 40);
+        descText.setAttribute('font-size', '12');
+        
+        // 설명 텍스트 (글자수 제한)
+        let desc = descriptions[i];
+        if (desc.length > 60) {
+          desc = desc.substring(0, 57) + '...';
+        }
+        descText.textContent = desc;
+        svg.appendChild(descText);
+      }
+      
+      // 연결선
+      const connectorStartX = isRight ? centerX + 10 : centerX - 10;
+      const connectorEndX = isRight ? boxX : boxX + boxWidth;
+      
+      const connector = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      connector.setAttribute('x1', connectorStartX);
+      connector.setAttribute('y1', y + 20);
+      connector.setAttribute('x2', connectorEndX);
+      connector.setAttribute('y2', y + 20);
+      connector.setAttribute('stroke', color);
+      connector.setAttribute('stroke-width', '2');
+      svg.appendChild(connector);
+    }
   } else {
     // 수평 타임라인
-    let html = '<div style="padding: 20px; position: relative;">';
+    const centerY = 180;
+    const startX = 80;
+    const itemWidth = (svgWidth - 160) / events.length;
     
     // 중앙 선
-    html += '<div style="position: absolute; left: 0; right: 0; top: 100px; height: 4px; background-color: #ddd;"></div>';
+    const centerLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    centerLine.setAttribute('x1', startX);
+    centerLine.setAttribute('y1', centerY);
+    centerLine.setAttribute('x2', svgWidth - 80);
+    centerLine.setAttribute('y2', centerY);
+    centerLine.setAttribute('stroke', '#ddd');
+    centerLine.setAttribute('stroke-width', '4');
+    svg.appendChild(centerLine);
     
-    // 이벤트 컨테이너
-    html += '<div style="display: flex; justify-content: space-between; position: relative; z-index: 1;">';
-    
-    events.forEach((event, index) => {
-      const title = titles[index] || '';
-      const description = descriptions[index] || '';
-      const color = getColor(index);
-      const isEven = index % 2 === 0;
+    for (let i = 0; i < events.length; i++) {
+      const x = startX + i * itemWidth;
+      const color = getColor(i);
+      const isTop = i % 2 === 0; // 위/아래 번갈아가며 배치
       
-      // 홀수/짝수 이벤트 위치 조정하여 겹침 방지
-      const topMargin = isEven ? '80px' : '30px';
-      const bottomMargin = isEven ? '30px' : '80px';
+      // 이벤트 원
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x + itemWidth / 2);
+      circle.setAttribute('cy', centerY);
+      circle.setAttribute('r', '10');
+      circle.setAttribute('fill', color);
+      svg.appendChild(circle);
       
-     html += `
-      <div style="flex: 1; max-width: ${100/events.length}%; min-width: 100px; display: flex; flex-direction: column; align-items: center;">
-        ${isEven ? `
-          <div style="margin-bottom: 70px; text-align: center;">
-            <div style="font-weight: bold; color: ${color};">${title}</div>
-            <div style="font-size: 12px; max-width: 150px; margin-top: 5px;">
-              ${description.length > 25 ? description.substring(0, 25) + '...' : description}
-            </div>
-          </div>
-          <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${color}; margin: 0; z-index: 2;"></div>
-          <div style="text-align: center; margin-top: 5px; font-weight: bold; font-size: 12px;">
-            ${event}
-          </div>
-        ` : `
-          <div style="text-align: center; margin-bottom: 5px; font-weight: bold; font-size: 12px;">
-            ${event}
-          </div>
-          <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${color}; margin: 0; z-index: 2;"></div>
-          <div style="margin-top: 70px; text-align: center;">
-            <div style="font-weight: bold; color: ${color};">${title}</div>
-            <div style="font-size: 12px; max-width: 150px; margin-top: 5px;">
-              ${description.length > 25 ? description.substring(0, 25) + '...' : description}
-            </div>
-          </div>
-        `}
-      </div>
-    `;
-    });
-    
-    html += '</div></div>';
-    chartDiv.innerHTML = html;
+      // 이벤트 날짜/시간
+      const timeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      timeText.setAttribute('x', x + itemWidth / 2);
+      timeText.setAttribute('y', isTop ? centerY + 30 : centerY - 15);
+      timeText.setAttribute('text-anchor', 'middle');
+      timeText.setAttribute('font-size', '14');
+      timeText.setAttribute('font-weight', 'bold');
+      timeText.textContent = events[i];
+      svg.appendChild(timeText);
+      
+      // 이벤트 내용 박스
+      const boxWidth = itemWidth - 20;
+      const boxHeight = 70;
+      const boxY = isTop ? centerY - boxHeight - 20 : centerY + 20;
+      
+      const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      box.setAttribute('x', x + 10);
+      box.setAttribute('y', boxY);
+      box.setAttribute('width', boxWidth);
+      box.setAttribute('height', boxHeight);
+      box.setAttribute('rx', '5');
+      box.setAttribute('fill', '#f8f9fa');
+      box.setAttribute('stroke', color);
+      box.setAttribute('stroke-width', '2');
+      svg.appendChild(box);
+      
+      // 이벤트 제목
+      const titleText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      titleText.setAttribute('x', x + itemWidth / 2);
+      titleText.setAttribute('y', boxY + 20);
+      titleText.setAttribute('text-anchor', 'middle');
+      titleText.setAttribute('font-size', '14');
+      titleText.setAttribute('font-weight', 'bold');
+      titleText.setAttribute('fill', color);
+      titleText.textContent = titles[i] || '';
+      svg.appendChild(titleText);
+      
+      // 이벤트 설명
+      if (descriptions[i]) {
+        const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        descText.setAttribute('x', x + itemWidth / 2);
+        descText.setAttribute('y', boxY + 45);
+        descText.setAttribute('text-anchor', 'middle');
+        descText.setAttribute('font-size', '12');
+        
+        // 설명 텍스트 (글자수 제한)
+        let desc = descriptions[i];
+        if (desc.length > 30) {
+          desc = desc.substring(0, 27) + '...';
+        }
+        descText.textContent = desc;
+        svg.appendChild(descText);
+      }
+      
+      // 연결선
+      const connectorStartY = isTop ? centerY - 10 : centerY + 10;
+      const connectorEndY = isTop ? boxY + boxHeight : boxY;
+      
+      const connector = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      connector.setAttribute('x1', x + itemWidth / 2);
+      connector.setAttribute('y1', connectorStartY);
+      connector.setAttribute('x2', x + itemWidth / 2);
+      connector.setAttribute('y2', connectorEndY);
+      connector.setAttribute('stroke', color);
+      connector.setAttribute('stroke-width', '2');
+      svg.appendChild(connector);
+    }
   }
 }
   
