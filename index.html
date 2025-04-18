@@ -780,6 +780,9 @@ function renderSimpleComparisonChart(container, data) {
   const valuesB = data['702'] || [];   // 두 번째 제품 값 배열
   const series = data['603'] || ['A','B'];
   const chartTitle = data['401'] || '비교 차트';
+  const scheme         = getColorScheme(data['302']);
+  const primaryColor   = scheme[0] || '#4285F4';
+  const secondaryColor = scheme[1] || '#EA4335';
   const maxValue = Math.max(
     ...valuesA.map(v=>+v||0),
     ...valuesB.map(v=>+v||0)
@@ -841,7 +844,7 @@ function renderSimpleComparisonChart(container, data) {
     barA.setAttribute('y', svgHeight - paddingY - heightA);
     barA.setAttribute('width', barWidth);
     barA.setAttribute('height', heightA);
-    barA.setAttribute('fill', '#4285F4');
+    barA.setAttribute('fill', primaryColor);
     svg.appendChild(barA);
     
     // 첫 번째 막대 값 라벨
@@ -861,7 +864,7 @@ function renderSimpleComparisonChart(container, data) {
     barB.setAttribute('y', svgHeight - paddingY - heightB);
     barB.setAttribute('width', barWidth);
     barB.setAttribute('height', heightB);
-    barB.setAttribute('fill', '#EA4335');
+    barB.setAttribute('fill', secondaryColor);
     svg.appendChild(barB);
     
     // 두 번째 막대 값 라벨
@@ -901,7 +904,7 @@ function renderSimpleComparisonChart(container, data) {
   legendA.setAttribute('y', 60);
   legendA.setAttribute('width', 15);
   legendA.setAttribute('height', 15);
-  legendA.setAttribute('fill', '#4285F4');
+  legendA.setAttribute('fill', primaryColor);
   svg.appendChild(legendA);
   
   const legendTextA = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -917,7 +920,7 @@ function renderSimpleComparisonChart(container, data) {
   legendB.setAttribute('y', 80);
   legendB.setAttribute('width', 15);
   legendB.setAttribute('height', 15);
-  legendB.setAttribute('fill', '#EA4335');
+  legendB.setAttribute('fill', secondaryColor);
   svg.appendChild(legendB);
   
   const legendTextB = document.createElementNS('http://www.w3.org/2000/svg', 'text');
