@@ -1357,6 +1357,7 @@ function renderSimpleRadarChart(container, data) {
   const hasSecondDataset = Array.isArray(dataset2) && dataset2.length > 0;
   const seriesLabels = data['603'] || ['시리즈 1', '시리즈 2'];
   const chartTitle = data['401'] || '레이더 차트';
+  const scheme = getColorScheme(data['302']);
 
   // 최대값 계산
   const allValues = [...dataset1];
