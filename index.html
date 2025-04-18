@@ -844,6 +844,13 @@ function renderSimpleLineChart(container, data) {
   const dataset2 = data['702'] || [];
   const hasSecondDataset = Array.isArray(dataset2) && dataset2.length > 0;
   const seriesLabels = data['603'] || ['시리즈 1', '시리즈 2'];
+
+  console.log('레이더 차트 데이터:', {
+  labels: labels,
+  dataset1: dataset1,
+  dataset2: dataset2,
+  maxValue: maxValue
+});
   
   // 최대값 계산
   const allValues = [...dataset1];
