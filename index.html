@@ -552,12 +552,13 @@ function renderSimpleLineChart(container, data) {
   chartDiv.innerHTML = svgHTML;
 }
 
- // 비교차트
-  function renderSimpleComparisonChart(container, data) {
-  const labels   = data['601'] || [];   // 예: ['크기','속도','성능',…]
-  const valuesA  = data['701'] || [];   // 첫 번째 제품 값 배열
-  const valuesB  = data['702'] || [];   // 두 번째 제품 값 배열
-  const series   = data['603'] || ['A','B'];
+  // 비교 차트를 SVG로 렌더링
+function renderSimpleComparisonChart(container, data) {
+  const labels = data['601'] || [];   // 예: ['크기','속도','성능',…]
+  const valuesA = data['701'] || [];   // 첫 번째 제품 값 배열
+  const valuesB = data['702'] || [];   // 두 번째 제품 값 배열
+  const series = data['603'] || ['A','B'];
+  const chartTitle = data['401'] || '비교 차트';
   const maxValue = Math.max(
     ...valuesA.map(v=>+v||0),
     ...valuesB.map(v=>+v||0)
@@ -565,69 +566,147 @@ function renderSimpleLineChart(container, data) {
 
   // 컨테이너 초기화
   container.innerHTML = '';
-  const chartDiv = document.createElement('div');
-  chartDiv.style.display = 'flex';
-  chartDiv.style.justifyContent = 'space-around';
-  chartDiv.style.padding = '20px';
-
-  // 축마다 두 개의 막대 생성
-  labels.forEach((lbl,i) => {
-   const a = +valuesA[i] || 0;
-   const b = +valuesB[i] || 0;
-   // 각 항목 컨테이너
-   chartDiv.innerHTML += `
-     <div style="
-       width: ${100/labels.length - 2}%;
-       display: flex;
-       flex-direction: column;
-       align-items: center;
-     ">
-       <!-- 막대 래퍼: 고정 높이, 하단 정렬, 옆으로 배치 -->
-       <div style="
-         display: flex;
-         align-items: flex-end;
-         gap: 4px;
-         height: 200px;
-         width: 100%;
-         padding-bottom: 4px;
-       ">
-         <div style="
-           flex: 1;
-           height: ${(a/maxValue)*100}%;
-           background: #4285F4;
-           display: flex;
-           justify-content: center;
-           align-items: center;
-           color: white;
-         ">${a}</div>
-         <div style="
-           flex: 1;
-           height: ${(b/maxValue)*100}%;
-           background: #EA4335;
-           display: flex;
-           justify-content: center;
-           align-items: center;
-           color: white;
-         ">${b}</div>
-       </div>
-       <!-- 레이블 -->
-       <div style="margin-top:8px; font-size:12px;">${lbl}</div>
-     </div>
-   `;
-});
-
-  // 범례
-  const legend = document.createElement('div');
-  legend.style.textAlign = 'center';
-  legend.innerHTML = `
-    <span style="display:inline-block; width:12px; height:12px; background:#4285F4;"></span> ${series[0]}
-    &nbsp;&nbsp;
-    <span style="display:inline-block; width:12px; height:12px; background:#EA4335;"></span> ${series[1]}
-  `;
-  container.appendChild(chartDiv);
-  container.appendChild(legend);
+  
+  // SVG 크기 설정
+  const svgWidth = 800;
+  const svgHeight = 500;
+  const paddingX = 60;
+  const paddingY = 80;
+  const chartWidth = svgWidth - 2 * paddingX;
+  const chartHeight = svgHeight - 2 * paddingY;
+  
+  // SVG 요소 생성
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', svgHeight);
+  svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  container.appendChild(svg);
+  
+  // 제목 추가
+  const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  titleElement.setAttribute('x', svgWidth / 2);
+  titleElement.setAttribute('y', 30);
+  titleElement.setAttribute('text-anchor', 'middle');
+  titleElement.setAttribute('font-size', '20');
+  titleElement.setAttribute('font-weight', 'bold');
+  titleElement.textContent = chartTitle;
+  svg.appendChild(titleElement);
+  
+  // X축 추가
+  const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  xAxis.setAttribute('x1', paddingX);
+  xAxis.setAttribute('y1', svgHeight - paddingY);
+  xAxis.setAttribute('x2', svgWidth - paddingX);
+  xAxis.setAttribute('y2', svgHeight - paddingY);
+  xAxis.setAttribute('stroke', '#333');
+  xAxis.setAttribute('stroke-width', '1');
+  svg.appendChild(xAxis);
+  
+  // 막대 너비 및 간격 계산
+  const groupWidth = chartWidth / labels.length;
+  const barWidth = groupWidth / 3;
+  const barSpacing = barWidth / 2;
+  
+  // 각 그룹의 막대 생성
+  for (let i = 0; i < labels.length; i++) {
+    const x = paddingX + i * groupWidth + groupWidth / 4;
+    
+    // 첫 번째 막대 (A)
+    const valueA = +valuesA[i] || 0;
+    const heightA = (valueA / maxValue) * chartHeight;
+    const barA = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    barA.setAttribute('x', x);
+    barA.setAttribute('y', svgHeight - paddingY - heightA);
+    barA.setAttribute('width', barWidth);
+    barA.setAttribute('height', heightA);
+    barA.setAttribute('fill', '#4285F4');
+    svg.appendChild(barA);
+    
+    // 첫 번째 막대 값 라벨
+    const labelA = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelA.setAttribute('x', x + barWidth / 2);
+    labelA.setAttribute('y', svgHeight - paddingY - heightA - 5);
+    labelA.setAttribute('text-anchor', 'middle');
+    labelA.setAttribute('font-size', '12');
+    labelA.textContent = valueA;
+    svg.appendChild(labelA);
+    
+    // 두 번째 막대 (B)
+    const valueB = +valuesB[i] || 0;
+    const heightB = (valueB / maxValue) * chartHeight;
+    const barB = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    barB.setAttribute('x', x + barWidth + barSpacing);
+    barB.setAttribute('y', svgHeight - paddingY - heightB);
+    barB.setAttribute('width', barWidth);
+    barB.setAttribute('height', heightB);
+    barB.setAttribute('fill', '#EA4335');
+    svg.appendChild(barB);
+    
+    // 두 번째 막대 값 라벨
+    const labelB = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelB.setAttribute('x', x + barWidth * 1.5 + barSpacing);
+    labelB.setAttribute('y', svgHeight - paddingY - heightB - 5);
+    labelB.setAttribute('text-anchor', 'middle');
+    labelB.setAttribute('font-size', '12');
+    labelB.textContent = valueB;
+    svg.appendChild(labelB);
+    
+    // X축 라벨
+    const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    xLabel.setAttribute('x', x + barWidth + barSpacing / 2);
+    xLabel.setAttribute('y', svgHeight - paddingY + 20);
+    xLabel.setAttribute('text-anchor', 'middle');
+    xLabel.setAttribute('font-size', '12');
+    xLabel.textContent = labels[i];
+    svg.appendChild(xLabel);
+  }
+  
+  // 범례 추가
+  // 범례 상자
+  const legendBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  legendBox.setAttribute('x', svgWidth - 150);
+  legendBox.setAttribute('y', 50);
+  legendBox.setAttribute('width', 120);
+  legendBox.setAttribute('height', 50);
+  legendBox.setAttribute('fill', 'white');
+  legendBox.setAttribute('stroke', '#ddd');
+  legendBox.setAttribute('stroke-width', '1');
+  svg.appendChild(legendBox);
+  
+  // 첫 번째 시리즈 범례
+  const legendA = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  legendA.setAttribute('x', svgWidth - 140);
+  legendA.setAttribute('y', 60);
+  legendA.setAttribute('width', 15);
+  legendA.setAttribute('height', 15);
+  legendA.setAttribute('fill', '#4285F4');
+  svg.appendChild(legendA);
+  
+  const legendTextA = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  legendTextA.setAttribute('x', svgWidth - 120);
+  legendTextA.setAttribute('y', 72);
+  legendTextA.setAttribute('font-size', '12');
+  legendTextA.textContent = series[0];
+  svg.appendChild(legendTextA);
+  
+  // 두 번째 시리즈 범례
+  const legendB = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  legendB.setAttribute('x', svgWidth - 140);
+  legendB.setAttribute('y', 80);
+  legendB.setAttribute('width', 15);
+  legendB.setAttribute('height', 15);
+  legendB.setAttribute('fill', '#EA4335');
+  svg.appendChild(legendB);
+  
+  const legendTextB = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  legendTextB.setAttribute('x', svgWidth - 120);
+  legendTextB.setAttribute('y', 92);
+  legendTextB.setAttribute('font-size', '12');
+  legendTextB.textContent = series[1];
+  svg.appendChild(legendTextB);
 }
-
+  
   // 프로세스 다이어그램
   function renderSimpleProcessDiagram(container, data) {
   const steps = data['601'] || [];
