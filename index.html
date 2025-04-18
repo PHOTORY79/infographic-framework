@@ -707,17 +707,37 @@ function renderSimpleComparisonChart(container, data) {
   svg.appendChild(legendTextB);
 }
   
-  // 프로세스 다이어그램
-  function renderSimpleProcessDiagram(container, data) {
+ // 프로세스 다이어그램을 SVG로 렌더링
+function renderSimpleProcessDiagram(container, data) {
   const steps = data['601'] || [];
   const descriptions = data['701'] || [];
   const isHorizontal = data['301'] && data['301'].toLowerCase().includes('horizontal');
+  const chartTitle = data['401'] || '프로세스 다이어그램';
   
-  // 차트 컨테이너 생성
-  const chartDiv = document.createElement('div');
-  chartDiv.style.width = '100%';
-  chartDiv.style.padding = '20px';
-  container.appendChild(chartDiv);
+  // 컨테이너 초기화
+  container.innerHTML = '';
+  
+  // SVG 크기 설정 (가로형/세로형에 따라 다르게)
+  const svgWidth = isHorizontal ? 900 : 600;
+  const svgHeight = isHorizontal ? 400 : Math.max(400, steps.length * 120);
+  
+  // SVG 요소 생성
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', svgHeight);
+  svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  container.appendChild(svg);
+  
+  // 제목 추가
+  const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  titleElement.setAttribute('x', svgWidth / 2);
+  titleElement.setAttribute('y', 30);
+  titleElement.setAttribute('text-anchor', 'middle');
+  titleElement.setAttribute('font-size', '20');
+  titleElement.setAttribute('font-weight', 'bold');
+  titleElement.textContent = chartTitle;
+  svg.appendChild(titleElement);
   
   // 색상 계산 함수
   function getColor(index) {
@@ -727,76 +747,154 @@ function renderSimpleComparisonChart(container, data) {
   
   if (isHorizontal) {
     // 수평 프로세스 다이어그램
-    let html = '<div style="display: flex; flex-direction: row; align-items: flex-start; overflow-x: auto; padding: 20px;">';
+    const boxWidth = 120;
+    const boxHeight = 80;
+    const arrowLength = 40;
+    const startY = 100;
     
-    steps.forEach((step, index) => {
-      const description = descriptions[index] || '';
-      const desc = description.split('\\n').join('<br>');
-      const color = getColor(index);
+    for (let i = 0; i < steps.length; i++) {
+      const x = 60 + i * (boxWidth + arrowLength);
+      const color = getColor(i);
       
-      html += `
-        <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; align-items: center;">
-          <div style="width: 120px; height: 80px; background-color: ${color}; border-radius: 6px; color: white; display: flex; justify-content: center; align-items: center; text-align: center; padding: 10px;">
-            <div>${step}</div>
-          </div>
-          <div style="width: 120px; margin-top: 8px; font-size: 12px; text-align: center;">${desc}</div>
-        </div>
-      `;
+      // 프로세스 박스
+      const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      box.setAttribute('x', x);
+      box.setAttribute('y', startY);
+      box.setAttribute('width', boxWidth);
+      box.setAttribute('height', boxHeight);
+      box.setAttribute('rx', '6');
+      box.setAttribute('ry', '6');
+      box.setAttribute('fill', color);
+      svg.appendChild(box);
       
-      // 화살표 (마지막 항목에는 추가하지 않음)
-      if (index < steps.length - 1) {
-        html += `
-          <div style="
-            width: 40px;
-            height: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          ">
-            <div style="font-size: 24px; color: #666;">→</div>
-          </div>
-        `;
+      // 단계 텍스트
+      const stepText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      stepText.setAttribute('x', x + boxWidth / 2);
+      stepText.setAttribute('y', startY + boxHeight / 2);
+      stepText.setAttribute('text-anchor', 'middle');
+      stepText.setAttribute('dominant-baseline', 'middle');
+      stepText.setAttribute('fill', 'white');
+      stepText.setAttribute('font-size', '14');
+      stepText.setAttribute('font-weight', 'bold');
+      stepText.textContent = steps[i];
+      svg.appendChild(stepText);
+      
+      // 설명 텍스트 (줄바꿈 처리)
+      if (descriptions[i]) {
+        const descLines = descriptions[i].split('\\n');
+        const lineHeight = 16;
+        
+        for (let j = 0; j < descLines.length; j++) {
+          const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          descText.setAttribute('x', x + boxWidth / 2);
+          descText.setAttribute('y', startY + boxHeight + 20 + j * lineHeight);
+          descText.setAttribute('text-anchor', 'middle');
+          descText.setAttribute('font-size', '12');
+          descText.textContent = descLines[j];
+          svg.appendChild(descText);
+        }
       }
-    });
-    
-    html += '</div>';
-    chartDiv.innerHTML = html;
+      
+      // 화살표 (마지막 항목 제외)
+      if (i < steps.length - 1) {
+        const arrowX = x + boxWidth;
+        const arrowY = startY + boxHeight / 2;
+        
+        // 화살표 선
+        const arrowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        arrowLine.setAttribute('x1', arrowX);
+        arrowLine.setAttribute('y1', arrowY);
+        arrowLine.setAttribute('x2', arrowX + arrowLength);
+        arrowLine.setAttribute('y2', arrowY);
+        arrowLine.setAttribute('stroke', '#666');
+        arrowLine.setAttribute('stroke-width', '2');
+        svg.appendChild(arrowLine);
+        
+        // 화살표 머리
+        const arrowHead = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        arrowHead.setAttribute('d', `M ${arrowX + arrowLength - 10} ${arrowY - 6} L ${arrowX + arrowLength} ${arrowY} L ${arrowX + arrowLength - 10} ${arrowY + 6}`);
+        arrowHead.setAttribute('fill', 'none');
+        arrowHead.setAttribute('stroke', '#666');
+        arrowHead.setAttribute('stroke-width', '2');
+        svg.appendChild(arrowHead);
+      }
+    }
   } else {
     // 수직 프로세스 다이어그램
-    let html = '<div style="display: flex; flex-direction: column; align-items: center; padding: 20px;">';
+    const boxWidth = 300;
+    const boxHeight = 80;
+    const arrowLength = 40;
+    const startX = (svgWidth - boxWidth) / 2;
     
-    steps.forEach((step, index) => {
-      const description = descriptions[index] || '';
-      const desc = description.split('\\n').join('<br>');
-      const color = getColor(index);
+    for (let i = 0; i < steps.length; i++) {
+      const y = 80 + i * (boxHeight + arrowLength);
+      const color = getColor(i);
       
-      html += `
-        <div style="width: 80%; max-width: 400px; margin-bottom: 10px;">
-          <div style="background-color: ${color}; border-radius: 6px; color: white; padding: 15px; text-align: center;">
-            <div style="font-weight: bold; margin-bottom: 5px;">${step}</div>
-            <div style="font-size: 12px;">${desc}</div>
-          </div>
-        </div>
-      `;
+      // 프로세스 박스
+      const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      box.setAttribute('x', startX);
+      box.setAttribute('y', y);
+      box.setAttribute('width', boxWidth);
+      box.setAttribute('height', boxHeight);
+      box.setAttribute('rx', '6');
+      box.setAttribute('ry', '6');
+      box.setAttribute('fill', color);
+      svg.appendChild(box);
       
-      // 화살표 (마지막 항목에는 추가하지 않음)
-      if (index < steps.length - 1) {
-        html += `
-          <div style="
-               height: 30px;
-               display: flex;
-               justify-content: center;
-               align-items: center;
-                margin: 5px 0;
-              ">
-            <div style="font-size: 24px; color: #666;">↓</div>
-          </div>
-        `;
+      // 단계 텍스트
+      const stepText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      stepText.setAttribute('x', startX + boxWidth / 2);
+      stepText.setAttribute('y', y + 25);
+      stepText.setAttribute('text-anchor', 'middle');
+      stepText.setAttribute('fill', 'white');
+      stepText.setAttribute('font-size', '14');
+      stepText.setAttribute('font-weight', 'bold');
+      stepText.textContent = steps[i];
+      svg.appendChild(stepText);
+      
+      // 설명 텍스트 (줄바꿈 처리)
+      if (descriptions[i]) {
+        const descLines = descriptions[i].split('\\n');
+        const lineHeight = 16;
+        
+        for (let j = 0; j < descLines.length; j++) {
+          if (j < 3) { // 최대 3줄로 제한
+            const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            descText.setAttribute('x', startX + boxWidth / 2);
+            descText.setAttribute('y', y + 45 + j * lineHeight);
+            descText.setAttribute('text-anchor', 'middle');
+            descText.setAttribute('fill', 'white');
+            descText.setAttribute('font-size', '12');
+            descText.textContent = descLines[j];
+            svg.appendChild(descText);
+          }
+        }
       }
-    });
-    
-    html += '</div>';
-    chartDiv.innerHTML = html;
+      
+      // 화살표 (마지막 항목 제외)
+      if (i < steps.length - 1) {
+        const arrowX = startX + boxWidth / 2;
+        const arrowY = y + boxHeight;
+        
+        // 화살표 선
+        const arrowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        arrowLine.setAttribute('x1', arrowX);
+        arrowLine.setAttribute('y1', arrowY);
+        arrowLine.setAttribute('x2', arrowX);
+        arrowLine.setAttribute('y2', arrowY + arrowLength);
+        arrowLine.setAttribute('stroke', '#666');
+        arrowLine.setAttribute('stroke-width', '2');
+        svg.appendChild(arrowLine);
+        
+        // 화살표 머리
+        const arrowHead = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        arrowHead.setAttribute('d', `M ${arrowX - 6} ${arrowY + arrowLength - 10} L ${arrowX} ${arrowY + arrowLength} L ${arrowX + 6} ${arrowY + arrowLength - 10}`);
+        arrowHead.setAttribute('fill', 'none');
+        arrowHead.setAttribute('stroke', '#666');
+        arrowHead.setAttribute('stroke-width', '2');
+        svg.appendChild(arrowHead);
+      }
+    }
   }
 }
 
