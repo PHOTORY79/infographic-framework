@@ -934,6 +934,7 @@ function renderSimpleProcessDiagram(container, data) {
   const descriptions = data['701'] || [];
   const isHorizontal = data['301'] && data['301'].toLowerCase().includes('horizontal');
   const chartTitle = data['401'] || '프로세스 다이어그램';
+  const scheme = getColorScheme(data['302']);
   
   // 컨테이너 초기화
   container.innerHTML = '';
@@ -961,10 +962,10 @@ function renderSimpleProcessDiagram(container, data) {
   svg.appendChild(titleElement);
   
   // 색상 계산 함수
-  function getColor(index) {
-    const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8334A2'];
-    return colors[index % colors.length];
-  }
+  // function getColor(index) {
+  //   const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8334A2'];
+  //  return colors[index % colors.length];
+  // }
   
   if (isHorizontal) {
     // 수평 프로세스 다이어그램
@@ -975,7 +976,7 @@ function renderSimpleProcessDiagram(container, data) {
     
     for (let i = 0; i < steps.length; i++) {
       const x = 60 + i * (boxWidth + arrowLength);
-      const color = getColor(i);
+      const color = scheme[i % scheme.length];
       
       // 프로세스 박스
       const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -1049,7 +1050,7 @@ function renderSimpleProcessDiagram(container, data) {
     
     for (let i = 0; i < steps.length; i++) {
       const y = 80 + i * (boxHeight + arrowLength);
-      const color = getColor(i);
+      const color = scheme[i % scheme.length];
       
       // 프로세스 박스
       const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
