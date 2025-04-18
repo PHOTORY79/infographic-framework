@@ -675,7 +675,7 @@ function renderSimpleLineChart(container, data) {
   
   if (isHorizontal) {
     // 수평 프로세스 다이어그램
-    let html = '<div style="display: flex; flex-direction: row; align-items: center; overflow-x: auto; padding: 20px;">';
+    let html = '<div style="display: flex; flex-direction: row; align-items: flex-start; overflow-x: auto; padding: 20px;">';
     
     steps.forEach((step, index) => {
       const description = descriptions[index] || '';
@@ -696,6 +696,7 @@ function renderSimpleLineChart(container, data) {
         html += `
           <div style="
             width: 40px;
+            height: 80px;
             display: flex;
             justify-content: center;
             align-items: center;
