@@ -838,197 +838,150 @@ function renderSimpleLineChart(container, data) {
 }
   
   // 간단한 레이더 차트 렌더링
-  function renderSimpleRadarChart(container, data) {
-    const labels = data['601'] || [];
-    const dataset1 = data['701'] || [];
-    const dataset2 = data['702'] || [];
-    const hasSecondDataset = Array.isArray(dataset2) && dataset2.length > 0;
-    const seriesLabels = data['603'] || ['시리즈 1', '시리즈 2'];
+ function renderSimpleRadarChart(container, data) {
+  const labels = data['601'] || [];
+  const dataset1 = data['701'] || [];
+  const dataset2 = data['702'] || [];
+  const hasSecondDataset = Array.isArray(dataset2) && dataset2.length > 0;
+  const seriesLabels = data['603'] || ['시리즈 1', '시리즈 2'];
+  
+  // 최대값 계산
+  const allValues = [...dataset1];
+  if (hasSecondDataset) allValues.push(...dataset2);
+  const maxValue = Math.max(...allValues.map(v => Number(v) || 0));
+  
+  const chartDiv = document.createElement('div');
+  chartDiv.style.width = '100%';
+  chartDiv.style.padding = '20px';
+  container.appendChild(chartDiv);
+  
+  // SVG 생성
+  let svgHTML = `
+    <svg width="100%" height="400" viewBox="0 0 400 400">
+      <!-- 배경 그리드 -->
+  `;
+  
+  // 중심점과 반지름
+  const centerX = 200;
+  const centerY = 200;
+  const radius = 150;
+  const numPoints = labels.length;
+  const angleStep = (Math.PI * 2) / numPoints;
+  
+  // 배경 그리드 그리기
+  const levels = 5;
+  for (let i = 1; i <= levels; i++) {
+    const gridRadius = (radius * i) / levels;
+    let pathData = "";
     
-    // 최대값 계산
-    const allValues = [...dataset1];
-    if (hasSecondDataset) allValues.push(...dataset2);
-    const maxValue = Math.max(...allValues.map(v => Number(v) || 0));
-    
-    const chartDiv = document.createElement('div');
-    chartDiv.style.width = '100%';
-    chartDiv.style.padding = '20px';
-    chartDiv.style.boxSizing = 'border-box';
-    container.appendChild(chartDiv);
-    
-    // SVG 생성
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("width", "100%");
-    svg.setAttribute("height", "400");
-    svg.setAttribute("viewBox", "0 0 400 400");
-    chartDiv.appendChild(svg);
-    
-    // 레이더 차트 설정
-    const centerX = 200;
-    const centerY = 200;
-    const radius = 150;
-    const numPoints = labels.length;
-    const angleStep = (Math.PI * 2) / numPoints;
-    
-    // 배경 그리드 그리기
-    const levels = 5;
-    for (let i = 1; i <= levels; i++) {
-      const pathData = [];
-      const gridRadius = (radius * i) / levels;
+    for (let j = 0; j < numPoints; j++) {
+      const angle = -Math.PI/2 + j * angleStep;
+      const x = centerX + gridRadius * Math.cos(angle);
+      const y = centerY + gridRadius * Math.sin(angle);
       
+      if (j === 0) {
+        pathData += `M ${x} ${y} `;
+      } else {
+        pathData += `L ${x} ${y} `;
+      }
+    }
+    pathData += "Z";
+    
+    svgHTML += `<path d="${pathData}" fill="none" stroke="#ddd" stroke-width="1" />`;
+    
+    // 값 표시 (선택적)
+    if (i === levels) {
       for (let j = 0; j < numPoints; j++) {
         const angle = -Math.PI/2 + j * angleStep;
         const x = centerX + gridRadius * Math.cos(angle);
         const y = centerY + gridRadius * Math.sin(angle);
+        const labelValue = i;
         
-        if (j === 0) {
-          pathData.push(`M ${x} ${y}`);
-        } else {
-          pathData.push(`L ${x} ${y}`);
-        }
-      }
-      pathData.push("Z");
-      
-      const gridPath = document.createElementNS(svgNS, "path");
-      gridPath.setAttribute("d", pathData.join(" "));
-      gridPath.setAttribute("fill", "none");
-      gridPath.setAttribute("stroke", "#ddd");
-      gridPath.setAttribute("stroke-width", "1");
-      svg.appendChild(gridPath);
-    }
-    
-    // 축 그리기
-    for (let i = 0; i < numPoints; i++) {
-      const angle = -Math.PI/2 + i * angleStep;
-      const x = centerX + radius * Math.cos(angle);
-      const y = centerY + radius * Math.sin(angle);
-      
-      const line = document.createElementNS(svgNS, "line");
-      line.setAttribute("x1", centerX);
-      line.setAttribute("y1", centerY);
-      line.setAttribute("x2", x);
-      line.setAttribute("y2", y);
-      line.setAttribute("stroke", "#ddd");
-      line.setAttribute("stroke-width", "1");
-      svg.appendChild(line);
-      
-      // 레이블 그리기
-      const labelX = centerX + (radius + 20) * Math.cos(angle);
-      const labelY = centerY + (radius + 20) * Math.sin(angle);
-      
-      const text = document.createElementNS(svgNS, "text");
-      text.setAttribute("x", labelX);
-      text.setAttribute("y", labelY);
-      text.setAttribute("text-anchor", "middle");
-      text.setAttribute("dominant-baseline", "middle");
-      text.setAttribute("font-size", "12");
-      text.textContent = labels[i] || `항목 ${i+1}`;
-      svg.appendChild(text);
-    }
-    
-    // 데이터 폴리곤 그리기 (첫 번째 데이터셋)
-    drawDataPolygon(dataset1, "#4285F4", 0.5);
-    
-    // 두 번째 데이터셋이 있으면 그리기
-    if (hasSecondDataset) {
-      drawDataPolygon(dataset2, "#EA4335", 0.5);
-    }
-    
-    // 범례 추가
-    const legendGroup = document.createElementNS(svgNS, "g");
-    legendGroup.setAttribute("transform", `translate(${centerX - 100}, ${centerY + radius + 40})`);
-    svg.appendChild(legendGroup);
-    
-    // 첫 번째 데이터셋 범례
-    const legend1Rect = document.createElementNS(svgNS, "rect");
-    legend1Rect.setAttribute("x", 0);
-    legend1Rect.setAttribute("y", 0);
-    legend1Rect.setAttribute("width", 15);
-    legend1Rect.setAttribute("height", 15);
-    legend1Rect.setAttribute("fill", "#4285F4");
-    legend1Rect.setAttribute("fill-opacity", "0.5");
-    legendGroup.appendChild(legend1Rect);
-    
-    const legend1Text = document.createElementNS(svgNS, "text");
-    legend1Text.setAttribute("x", 25);
-    legend1Text.setAttribute("y", 12);
-    legend1Text.setAttribute("font-size", "12");
-    legend1Text.textContent = seriesLabels[0] || "시리즈 1";
-    legendGroup.appendChild(legend1Text);
-    
-    // 두 번째 데이터셋 범례 (있을 경우)
-    if (hasSecondDataset) {
-      const legend2Rect = document.createElementNS(svgNS, "rect");
-      legend2Rect.setAttribute("x", 100);
-      legend2Rect.setAttribute("y", 0);
-      legend2Rect.setAttribute("width", 15);
-      legend2Rect.setAttribute("height", 15);
-      legend2Rect.setAttribute("fill", "#EA4335");
-      legend2Rect.setAttribute("fill-opacity", "0.5");
-      legendGroup.appendChild(legend2Rect);
-      
-      const legend2Text = document.createElementNS(svgNS, "text");
-      legend2Text.setAttribute("x", 125);
-      legend2Text.setAttribute("y", 12);
-      legend2Text.setAttribute("font-size", "12");
-      legend2Text.textContent = seriesLabels[1] || "시리즈 2";
-      legendGroup.appendChild(legend2Text);
-    }
-    
-    // 데이터 폴리곤 그리기 함수
-    function drawDataPolygon(dataset, color, opacity) {
-      const pathData = [];
-      
-      for (let i = 0; i < numPoints; i++) {
-        const value = i < dataset.length ? Number(dataset[i]) || 0 : 0;
-        const ratio = Math.min(value / maxValue, 1); // 1 이상이면 1로 제한
-        const angle = -Math.PI/2 + i * angleStep;
-        const x = centerX + radius * ratio * Math.cos(angle);
-        const y = centerY + radius * ratio * Math.sin(angle);
+        // 값 위치 조정
+        const textX = centerX + (gridRadius + 15) * Math.cos(angle);
+        const textY = centerY + (gridRadius + 15) * Math.sin(angle);
         
-        if (i === 0) {
-          pathData.push(`M ${x} ${y}`);
-        } else {
-          pathData.push(`L ${x} ${y}`);
-        }
-      }
-      pathData.push("Z");
-      
-      const polygon = document.createElementNS(svgNS, "path");
-      polygon.setAttribute("d", pathData.join(" "));
-      polygon.setAttribute("fill", color);
-      polygon.setAttribute("fill-opacity", opacity);
-      polygon.setAttribute("stroke", color);
-      polygon.setAttribute("stroke-width", "2");
-      svg.appendChild(polygon);
-      
-      // 데이터 포인트 그리기
-      for (let i = 0; i < numPoints; i++) {
-        const value = i < dataset.length ? Number(dataset[i]) || 0 : 0;
-        const ratio = Math.min(value / maxValue, 1);
-        const angle = -Math.PI/2 + i * angleStep;
-        const x = centerX + radius * ratio * Math.cos(angle);
-        const y = centerY + radius * ratio * Math.sin(angle);
-        
-        const dot = document.createElementNS(svgNS, "circle");
-        dot.setAttribute("cx", x);
-        dot.setAttribute("cy", y);
-        dot.setAttribute("r", "4");
-        dot.setAttribute("fill", color);
-        svg.appendChild(dot);
-        
-        // 값 표시
-        const valueText = document.createElementNS(svgNS, "text");
-        valueText.setAttribute("x", x);
-        valueText.setAttribute("y", y - 10);
-        valueText.setAttribute("text-anchor", "middle");
-        valueText.setAttribute("font-size", "10");
-        valueText.textContent = value;
-        svg.appendChild(valueText);
+        svgHTML += `<text x="${textX}" y="${textY}" text-anchor="middle" font-size="10" fill="#999">${labelValue}</text>`;
       }
     }
   }
+  
+  // 축 그리기
+  for (let i = 0; i < numPoints; i++) {
+    const angle = -Math.PI/2 + i * angleStep;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    
+    svgHTML += `<line x1="${centerX}" y1="${centerY}" x2="${x}" y2="${y}" stroke="#ddd" stroke-width="1" />`;
+    
+    // 레이블 위치 계산 및 그리기
+    const labelDistance = radius + 25; // 레이블과 차트 사이 간격 늘림
+    const labelX = centerX + labelDistance * Math.cos(angle);
+    const labelY = centerY + labelDistance * Math.sin(angle);
+    
+    svgHTML += `<text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="12">${labels[i] || `항목 ${i+1}`}</text>`;
+  }
+  
+  // 첫 번째 데이터셋 폴리곤 그리기
+  svgHTML += drawDataPolygon(dataset1, "#4285F4", 0.6); // 투명도 증가
+  
+  // 두 번째 데이터셋이 있으면 그리기
+  if (hasSecondDataset) {
+    svgHTML += drawDataPolygon(dataset2, "#EA4335", 0.6); // 투명도 증가
+  }
+  
+  // 범례 추가
+  svgHTML += `
+    <g transform="translate(${centerX - 100}, ${centerY + radius + 40})">
+      <!-- 첫 번째 데이터셋 범례 -->
+      <rect x="0" y="0" width="15" height="15" fill="#4285F4" fill-opacity="0.6" />
+      <text x="25" y="12" font-size="12">${seriesLabels[0] || "시리즈 1"}</text>
+      
+      ${hasSecondDataset ? `
+        <!-- 두 번째 데이터셋 범례 -->
+        <rect x="100" y="0" width="15" height="15" fill="#EA4335" fill-opacity="0.6" />
+        <text x="125" y="12" font-size="12">${seriesLabels[1] || "시리즈 2"}</text>
+      ` : ''}
+    </g>
+  `;
+  
+  svgHTML += `</svg>`;
+  chartDiv.innerHTML = svgHTML;
+  
+  // 데이터 폴리곤 그리기 함수
+  function drawDataPolygon(dataset, color, opacity) {
+    let polygonPath = "";
+    let dotsAndValues = "";
+    
+    // 폴리곤 경로 생성
+    for (let i = 0; i < numPoints; i++) {
+      const value = i < dataset.length ? Number(dataset[i]) || 0 : 0;
+      const ratio = Math.min(value / maxValue, 1);
+      const angle = -Math.PI/2 + i * angleStep;
+      const x = centerX + radius * ratio * Math.cos(angle);
+      const y = centerY + radius * ratio * Math.sin(angle);
+      
+      if (i === 0) {
+        polygonPath += `M ${x} ${y} `;
+      } else {
+        polygonPath += `L ${x} ${y} `;
+      }
+      
+      // 데이터 포인트와 값 추가
+      dotsAndValues += `
+        <circle cx="${x}" cy="${y}" r="4" fill="${color}" />
+        <text x="${x}" y="${y - 10}" text-anchor="middle" font-size="11" fill="${color}" font-weight="bold">${value}</text>
+      `;
+    }
+    
+    polygonPath += "Z";
+    
+    return `
+      <path d="${polygonPath}" fill="${color}" fill-opacity="${opacity}" stroke="${color}" stroke-width="2" />
+      ${dotsAndValues}
+    `;
+  }
+}
   
   // 인포그래픽 생성 버튼에 이벤트 리스너 연결
   document.getElementById('generate-button').addEventListener('click', function() {
