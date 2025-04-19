@@ -1061,7 +1061,7 @@ function renderSimpleProcessDiagram(container, data) {
       
      // 설명 텍스트 (줄바꿈 처리 - tspan 사용)
         if (descriptions[i]) {
-          const descLines = descriptions[i].split('\\n'); // '\n' 기준으로 줄 나누기
+          const descLines = descriptions[i].split('\n'); // '\n' 기준으로 줄 나누기
           console.log(`Step ${i}: Description lines =`, descLines); // <-- 로그 추가
 
           if (descLines.length > 0) {
