@@ -1059,21 +1059,34 @@ function renderSimpleProcessDiagram(container, data) {
       stepText.textContent = steps[i];
       svg.appendChild(stepText);
       
-      // 설명 텍스트 (줄바꿈 처리)
-      if (descriptions[i]) {
-        const descLines = descriptions[i].split('\\n');
-        const lineHeight = 16;
-        
-        for (let j = 0; j < descLines.length; j++) {
-          const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-          descText.setAttribute('x', x + boxWidth / 2);
-          descText.setAttribute('y', boxY + currentBoxHeight + 20 + j * lineHeight);
-          descText.setAttribute('text-anchor', 'middle');
-          descText.setAttribute('font-size', '12');
-          descText.textContent = descLines[j];
-          svg.appendChild(descText);
+     // 설명 텍스트 (줄바꿈 처리 - tspan 사용)
+        if (descriptions[i]) {
+          const descLines = descriptions[i].split('\\n'); // '\n' 기준으로 줄 나누기
+
+          if (descLines.length > 0) {
+            const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            // 텍스트 블록 시작 위치 설정: 박스 바로 아래, 왼쪽 정렬 기준
+            textElement.setAttribute('x', x); // 박스의 시작 x 좌표 사용
+            textElement.setAttribute('y', boxY + currentBoxHeight + 20); // 박스 하단 + 20px 여백
+            textElement.setAttribute('text-anchor', 'start'); // 왼쪽 정렬
+            textElement.setAttribute('font-size', '12');
+            textElement.setAttribute('fill', '#333'); // 텍스트 색상 (흰색 배경에 잘 보이도록)
+
+            // 각 줄을 tspan으로 추가
+            descLines.forEach((line, j) => {
+              const tspanElement = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+              tspanElement.setAttribute('x', x); // 각 줄의 시작 x 좌표를 동일하게 설정
+              if (j > 0) {
+                // 첫 번째 줄 이후에는 줄 간격(dy) 설정
+                tspanElement.setAttribute('dy', '1.2em'); 
+              }
+              tspanElement.textContent = line; // 현재 줄 텍스트 설정
+              textElement.appendChild(tspanElement); // text 요소에 tspan 추가
+            });
+
+            svg.appendChild(textElement); // 완성된 text 요소 SVG에 추가
+          }
         }
-      }
       
       // 화살표 (마지막 항목 제외)
       if (i < steps.length - 1) {
