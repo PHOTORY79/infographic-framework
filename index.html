@@ -1026,8 +1026,6 @@ function renderSimpleProcessDiagram(container, data) {
    
     for (let i = 0; i < steps.length; i++) {
       const descCount = descriptions[i] ? descriptions[i].split('\n').length : 1;
-      const boxHeight = descCount * lineHeight + verticalPad;
-      const boxY      = centerY - boxHeight/2;
       const x = 60 + i * (boxWidth + arrowLength);
       const color = scheme[i % scheme.length];
       // 현재 단계의 설명 가져오기 및 줄 수 계산
