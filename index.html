@@ -1067,7 +1067,7 @@ function renderSimpleProcessDiagram(container, data) {
         for (let j = 0; j < descLines.length; j++) {
           const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           descText.setAttribute('x', x + boxWidth / 2);
-          descText.setAttribute('y', startY + boxHeight + 20 + j * lineHeight);
+          descText.setAttribute('y', boxY + 45 + j * lineHeight);
           descText.setAttribute('text-anchor', 'middle');
           descText.setAttribute('font-size', '12');
           descText.textContent = descLines[j];
