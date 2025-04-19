@@ -1078,11 +1078,7 @@ function renderSimpleComparisonChart(container, data) {
    
   // 컨테이너 초기화
   container.innerHTML = '';
-  
-  // layout 값에 따라 분기 시작
-  if (layout === 'vertical' || layout === 'default') {
-    console.log('Rendering comparison chart as: Side-by-Side Vertical Bars'); // 임시 확인용 로그
-  
+
   // SVG 요소 생성
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', '100%');
@@ -1100,6 +1096,10 @@ function renderSimpleComparisonChart(container, data) {
   titleElement.setAttribute('font-weight', 'bold');
   titleElement.textContent = chartTitle;
   svg.appendChild(titleElement);
+  
+  // layout 값에 따라 분기 시작
+  if (layout === 'vertical' || layout === 'default') {
+    console.log('Rendering comparison chart as: Side-by-Side Vertical Bars'); // 임시 확인용 로그
   
   // X축 추가
   const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
