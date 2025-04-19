@@ -162,6 +162,15 @@ function getPaletteColor(index, schemeKey = 'corporate') {
   const palette = getColorScheme(schemeKey);
   return palette[index % palette.length];
 }
+
+  // ─── 레이아웃 옵션 헬퍼 ───
+function getLayoutOption(layoutValue) {
+  const v = (layoutValue || '').toLowerCase();
+  if (v.includes('vertical'))   return 'vertical';
+  if (v.includes('horizontal')) return 'horizontal';
+  return 'default';
+}
+
 window.addEventListener('load', function() {
   console.log('페이지 로드 완료');
   
@@ -256,7 +265,9 @@ function renderSimpleBarChart(container, data) {
   const xLabels = data['601'] || [];
   const dataset = data['701'] || [];
   const chartTitle = data['401'] || '막대 차트';
-  const isHorizontal = data['301'] && data['301'].toLowerCase().includes('horizontal');
+// const isHorizontal = data['301'] && data['301'].toLowerCase().includes('horizontal');
+  const layout = getLayoutOption(data['301']);
+  const isHorizontal = (layout === 'horizontal');
   const scheme = getColorScheme(data['302']);
   
   console.log('바차트 방향:', isHorizontal ? '수평' : '수직');
