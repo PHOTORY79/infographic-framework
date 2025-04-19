@@ -403,10 +403,30 @@ function renderSimpleBarChart(container, data) {
       // 막대 추가
       const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       bar.setAttribute('x', x);
-      bar.setAttribute('y', y);
+      bar.setAttribute('y', svgHeight - paddingY); // Y 위치를 X축(차트 바닥)으로 설정
       bar.setAttribute('width', barWidth);
-      bar.setAttribute('height', height);
+      bar.setAttribute('height', 0); // 초기 높이를 0으로 설정
       bar.setAttribute('fill', scheme[i % scheme.length]);
+       // --- 여기에 애니메이션 코드 추가 시작 ---
+      // 1. 'height' 속성 애니메이션 정의
+      const animateHeight = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+      animateHeight.setAttribute('attributeName', 'height'); // 'height' 속성을 변경 대상으로 지정
+      animateHeight.setAttribute('from', '0');           // 시작 값: 0
+      animateHeight.setAttribute('to', height);          // 끝 값: 이전에 계산된 최종 높이 'height' 변수
+      animateHeight.setAttribute('dur', '0.5s');         // 애니메이션 지속 시간: 0.5초
+      animateHeight.setAttribute('fill', 'freeze');      // 애니메이션 종료 후 최종 상태 유지
+      // begin="0s" 는 기본값이므로 생략 가능 (즉시 시작)
+      bar.appendChild(animateHeight);                    // ★ 중요: 생성된 animate 요소를 'bar'의 자식으로 추가
+  
+      // 2. 'y' 속성 애니메이션 정의 (높이가 커지면서 위로 올라가야 하므로 y도 변경)
+      const animateY = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+      animateY.setAttribute('attributeName', 'y');       // 'y' 속성을 변경 대상으로 지정
+      animateY.setAttribute('from', svgHeight - paddingY); // 시작 값: 차트 바닥의 y 좌표
+      animateY.setAttribute('to', y);              // 끝 값: 이전에 계산된 최종 'y' 변수
+      animateY.setAttribute('dur', '0.5s');         // 애니메이션 지속 시간: 0.5초
+      animateY.setAttribute('fill', 'freeze');      // 애니메이션 종료 후 최종 상태 유지
+      bar.appendChild(animateY);                         // ★ 중요: 생성된 animate 요소를 'bar'의 자식으로 추가
+      // --- 애니메이션 코드 추가 끝 ---
       svg.appendChild(bar);
       
       // 값 라벨 추가
