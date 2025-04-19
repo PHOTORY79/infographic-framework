@@ -1062,30 +1062,27 @@ function renderSimpleProcessDiagram(container, data) {
      // 설명 텍스트 (줄바꿈 처리 - tspan 사용)
         if (descriptions[i]) {
           const descLines = descriptions[i].split('\n'); // '\n' 기준으로 줄 나누기
-          console.log(`Step ${i}: Description lines =`, descLines); // <-- 로그 추가
 
           if (descLines.length > 0) {
             const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             // 텍스트 블록 시작 위치 설정: 박스 바로 아래, 왼쪽 정렬 기준
-            textElement.setAttribute('x', x); // 박스의 시작 x 좌표 사용
+            textElement.setAttribute('x', x + boxWidth / 2); // 박스의 시작 x 좌표 사용
             textElement.setAttribute('y', boxY + currentBoxHeight + 20); // 박스 하단 + 20px 여백
-            textElement.setAttribute('text-anchor', 'start'); // 왼쪽 정렬
+            textElement.setAttribute('text-anchor', 'middle'); // 가운 정렬
             textElement.setAttribute('font-size', '12');
             textElement.setAttribute('fill', '#333'); // 텍스트 색상 (흰색 배경에 잘 보이도록)
 
             // 각 줄을 tspan으로 추가
             descLines.forEach((line, j) => {
               const tspanElement = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-              tspanElement.setAttribute('x', x); // 각 줄의 시작 x 좌표를 동일하게 설정
+              tspanElement.setAttribute('x', x + boxWidth / 2); // 각 줄의 시작 x 좌표를 동일하게 설정
               if (j > 0) {
                 // 첫 번째 줄 이후에는 줄 간격(dy) 설정
                 tspanElement.setAttribute('dy', '1.2em'); 
               }
               tspanElement.textContent = line; // 현재 줄 텍스트 설정
-              console.log(`  Line ${j}: tspan attrs =`, { x: tspanElement.getAttribute('x'), dy: tspanElement.getAttribute('dy'), text: line }); // <-- 로그 추가
               textElement.appendChild(tspanElement); // text 요소에 tspan 추가
             });
-            console.log(`  Parent text attrs =`, { x: textElement.getAttribute('x'), y: textElement.getAttribute('y'), anchor: textElement.getAttribute('text-anchor') }); // <-- 로그 추가
             svg.appendChild(textElement); // 완성된 text 요소 SVG에 추가
           }
         }
