@@ -1161,7 +1161,7 @@ function renderSimpleProcessDiagram(container, data) {
       // 화살표 (마지막 항목 제외)
       if (i < steps.length - 1) {
         const arrowX = startX + boxWidth / 2;
-        const arrowY = y + boxHeight;
+        const arrowY = y + currentBoxHeight;
         
         // 화살표 선
         const arrowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
