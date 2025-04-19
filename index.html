@@ -609,7 +609,7 @@ function renderSimpleLineChart(container, data) {
   maxValue = Math.ceil(maxValue * 1.1); // 약간의 여유 공간
   
   // 그리드 라인 및 Y축 레이블
-  if if (!isHorizontal) { // <-- if 시작
+  if (!isHorizontal) { // <-- if 시작
     const gridLines = 5;
     for (let i = 0; i <= gridLines; i++) {
     const y = paddingY + chartHeight - (i / gridLines) * chartHeight;
@@ -658,8 +658,7 @@ function renderSimpleLineChart(container, data) {
     xLabel.textContent = label;
     svg.appendChild(xLabel);
   });
-} // <-- if 끝
-  
+
   // 첫 번째 데이터셋 라인
   const linePath1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   let path1Data = '';
@@ -811,8 +810,243 @@ function renderSimpleLineChart(container, data) {
     legendText2.textContent = seriesLabels[1];
     legendGroup.appendChild(legendText2);
   }
-  
   svg.appendChild(legendGroup);
+} // <-- if 끝
+else { // 수평 차트 (Horizontal) 로직 시작
+
+  // 세로축 (항목/카테고리 축) - 수평 차트에서는 왼쪽에 위치
+  const yAxis_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  yAxis_h.setAttribute('x1', paddingX); // 왼쪽 패딩 위치 (X 좌표 시작)
+  yAxis_h.setAttribute('y1', paddingY); // 위쪽 패딩 위치 (Y 좌표 시작)
+  yAxis_h.setAttribute('x2', paddingX); // 왼쪽 패딩 위치 (X 좌표 끝 - 수직선이므로 동일)
+  yAxis_h.setAttribute('y2', paddingY + chartHeight); // 위쪽 패딩 + 차트 높이 (Y 좌표 끝)
+  yAxis_h.setAttribute('stroke', '#333'); // 선 색상
+  yAxis_h.setAttribute('stroke-width', '1'); // 선 두께
+  svg.appendChild(yAxis_h); // 생성한 선을 SVG에 추가
+
+  // 가로축 (값 축) - 수평 차트에서는 아래쪽에 위치
+  const xAxis_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  xAxis_h.setAttribute('x1', paddingX); // 왼쪽 패딩 위치 (X 좌표 시작)
+  xAxis_h.setAttribute('y1', paddingY + chartHeight); // 위쪽 패딩 + 차트 높이 (Y 좌표 시작 - 차트 바닥)
+  xAxis_h.setAttribute('x2', paddingX + chartWidth); // 왼쪽 패딩 + 차트 너비 (X 좌표 끝)
+  xAxis_h.setAttribute('y2', paddingY + chartHeight); // 위쪽 패딩 + 차트 높이 (Y 좌표 끝 - 수평선이므로 동일)
+  xAxis_h.setAttribute('stroke', '#333'); // 선 색상
+  xAxis_h.setAttribute('stroke-width', '1'); // 선 두께
+  svg.appendChild(xAxis_h); // 생성한 선을 SVG에 추가
+  
+  const gridLines = 5; // 수직 차트와 동일하게 5개의 그리드/눈금 구간을 사용합니다.
+for (let i = 0; i <= gridLines; i++) {
+    // 현재 눈금/그리드 라인이 위치할 X 좌표를 계산합니다. (값 축 기준)
+    const x = paddingX + (i / gridLines) * chartWidth;
+    // 현재 눈금에 해당하는 실제 데이터 값을 계산합니다. (최소값 ~ 최대값 범위 내)
+    const value = minValue + (i / gridLines) * (maxValue - minValue);
+
+    // 세로 그리드 라인 생성 (값 축 눈금에 맞춰 세로로 그림)
+    const gridLine_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    gridLine_h.setAttribute('x1', x);
+    gridLine_h.setAttribute('y1', paddingY); // 차트 영역 상단에서 시작
+    gridLine_h.setAttribute('x2', x);
+    gridLine_h.setAttribute('y2', paddingY + chartHeight); // 차트 영역 하단까지
+    gridLine_h.setAttribute('stroke', '#e0e0e0'); // 그리드 라인 색상 (연한 회색)
+    gridLine_h.setAttribute('stroke-width', '1'); // 그리드 라인 두께
+    svg.appendChild(gridLine_h);
+
+    // 가로축 (값 축) 레이블 생성 (X축 아래에 숫자 표시)
+    const xLabel_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    xLabel_h.setAttribute('x', x); // 해당 눈금의 X 좌표
+    xLabel_h.setAttribute('y', paddingY + chartHeight + 20); // 가로축 선보다 20px 아래
+    xLabel_h.setAttribute('text-anchor', 'middle'); // 텍스트를 X 좌표 기준으로 중앙 정렬
+    xLabel_h.setAttribute('font-size', '12'); // 글자 크기
+    xLabel_h.textContent = Math.round(value); // 계산된 값을 반올림하여 텍스트로 표시
+    svg.appendChild(xLabel_h);
+   }
+      // 세로축 (항목/카테고리) 레이블 추가
+    const yStep_h = chartHeight / (xLabels.length - 1 || 1); // 각 항목 레이블 간의 세로 간격을 계산합니다.
+    xLabels.forEach((label, i) => {
+    // 현재 레이블이 위치할 Y 좌표를 계산합니다.
+    const y = paddingY + i * yStep_h;
+
+    // 세로축 레이블 텍스트 요소를 생성합니다.
+    const yLabel_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    yLabel_h.setAttribute('x', paddingX - 10); // 세로축 선(yAxis_h)보다 10px 왼쪽에 위치시킵니다.
+    yLabel_h.setAttribute('y', y); // 위에서 계산한 Y 좌표에 배치합니다.
+    yLabel_h.setAttribute('text-anchor', 'end'); // 텍스트의 끝(오른쪽)을 기준점(x 좌표)에 맞춰 정렬합니다.
+    yLabel_h.setAttribute('alignment-baseline', 'middle'); // 텍스트의 세로 중앙을 기준점(y 좌표)에 맞춥니다.
+    yLabel_h.setAttribute('font-size', '12'); // 글자 크기를 설정합니다.
+    yLabel_h.textContent = label; // xLabels 배열에서 가져온 실제 텍스트 ('Q1', 'Q2' 등)를 표시합니다.
+    svg.appendChild(yLabel_h); // 생성한 레이블을 SVG에 추가합니다.
+   });
+ // --- 수평 차트 데이터 플로팅 시작 ---
+ // 첫 번째 데이터셋 라인 그리기 (Horizontal)
+    const linePath1_h = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    let path1Data_h = '';
+    // --- 추가할 코드 (1/2): 선 경로 계산 ---
+  dataset.forEach((value, i) => {
+    if (i >= xLabels.length) return; // 레이블 개수만큼만 처리
+    const y = paddingY + i * yStep_h; // Y 좌표 (항목 순서 기준)
+    const xValue = Number(value) || 0;
+    const normalizedValue = (maxValue - minValue === 0) ? 0 : (xValue - minValue) / (maxValue - minValue);
+    const x = paddingX + normalizedValue * chartWidth; // X 좌표 (값 기준)
+    path1Data_h += (i === 0 ? 'M' : 'L') + ` ${x} ${y} `; // 경로 데이터 생성
+  });
+  // --- 여기까지 추가 (1/2) ---
+  // --- 추가할 코드 (2/2): 선 그리기 ---
+    linePath1_h.setAttribute('d', path1Data_h); // 계산된 경로를 'd' 속성에 설정
+    linePath1_h.setAttribute('fill', 'none'); // 채우기 없음
+    linePath1_h.setAttribute('stroke', primaryColor); // 선 색상
+    linePath1_h.setAttribute('stroke-width', '2'); // 선 두께
+    linePath1_h.setAttribute('style', `stroke: ${primaryColor}; stroke-opacity: 1;`); // 스타일
+    svg.appendChild(linePath1_h); // SVG에 선 추가
+    // --- 여기까지 추가 (2/2) ---
+  
+    // yStep_h 변수는 이미 위의 '세로축 레이블 추가' 부분에서 계산되었으므로 여기서는 재사용합니다.
+    // 첫 번째 데이터셋 포인트(점) 및 값 텍스트 추가 (Horizontal)
+  dataset.forEach((value, i) => {
+    // 항목 레이블 개수(xLabels.length)를 벗어나는 데이터는 그리지 않습니다.
+    if (i >= xLabels.length) return;
+
+    // Y 좌표 계산 (선 그리기 로직과 동일)
+    const y = paddingY + i * yStep_h;
+
+    // X 좌표 계산 (선 그리기 로직과 동일)
+    const xValue = Number(value) || 0;
+    const normalizedValue = (maxValue - minValue === 0) ? 0 : (xValue - minValue) / (maxValue - minValue);
+    const x = paddingX + normalizedValue * chartWidth;
+
+    // 데이터 포인트 (점) 생성
+    const circle_h = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle_h.setAttribute('cx', x); // 계산된 X 좌표 사용
+    circle_h.setAttribute('cy', y); // 계산된 Y 좌표 사용
+    circle_h.setAttribute('r', '4'); // 점의 반지름 크기
+    circle_h.setAttribute('fill', primaryColor); // 점의 채우기 색상 (첫 번째 시리즈 색상)
+    circle_h.setAttribute('style', `fill: ${primaryColor}; fill-opacity: 1;`); // CSS 스타일 설정
+    svg.appendChild(circle_h); // 생성한 점을 SVG에 추가
+
+    // 값 텍스트 생성
+    const valueText_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    valueText_h.setAttribute('x', x + 10); // 점에서 오른쪽으로 10px 떨어진 위치에 X 좌표 설정
+    valueText_h.setAttribute('y', y); // 점과 동일한 Y 좌표 사용
+    valueText_h.setAttribute('text-anchor', 'start'); // 텍스트의 시작점(왼쪽)을 X 좌표에 맞춤
+    valueText_h.setAttribute('alignment-baseline', 'middle'); // 텍스트의 세로 중앙을 Y 좌표에 맞춤
+    valueText_h.setAttribute('font-size', '10'); // 글자 크기
+    valueText_h.textContent = value; // 실제 데이터 값(value)을 텍스트 내용으로 설정
+    svg.appendChild(valueText_h); // 생성한 값 텍스트를 SVG에 추가
+   });
+
+    // 두 번째 데이터셋 처리 (Horizontal) - 데이터가 있을 경우에만 실행됩니다.
+  if (hasSecondDataset) {
+    // 두 번째 데이터셋 라인 그리기
+    const linePath2_h = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    let path2Data_h = '';
+
+    dataset2.forEach((value, i) => {
+        if (i >= xLabels.length) return; // 항목 레이블 개수만큼만 그립니다.
+        // Y 좌표 계산 (첫 번째 데이터셋과 동일)
+        const y = paddingY + i * yStep_h;
+        // X 좌표 계산 (첫 번째 데이터셋과 동일)
+        const xValue = Number(value) || 0;
+        const normalizedValue = (maxValue - minValue === 0) ? 0 : (xValue - minValue) / (maxValue - minValue);
+        const x = paddingX + normalizedValue * chartWidth;
+        // 경로 데이터 생성
+        path2Data_h += (i === 0 ? 'M' : 'L') + ` ${x} ${y} `;
+    });
+
+    linePath2_h.setAttribute('d', path2Data_h);
+    linePath2_h.setAttribute('fill', 'none');
+    linePath2_h.setAttribute('stroke', secondaryColor); // 두 번째 시리즈 색상 사용
+    linePath2_h.setAttribute('stroke-width', '2');
+    linePath2_h.setAttribute('style', `stroke: ${secondaryColor}; stroke-opacity: 1;`);
+    svg.appendChild(linePath2_h); // 두 번째 선 경로 추가
+
+    // 두 번째 데이터셋 포인트(점) 및 값 텍스트 추가
+    dataset2.forEach((value, i) => {
+        if (i >= xLabels.length) return;
+        // Y 좌표 계산 (첫 번째 데이터셋과 동일)
+        const y = paddingY + i * yStep_h;
+         // X 좌표 계산 (첫 번째 데이터셋과 동일)
+        const xValue = Number(value) || 0;
+        const normalizedValue = (maxValue - minValue === 0) ? 0 : (xValue - minValue) / (maxValue - minValue);
+        const x = paddingX + normalizedValue * chartWidth;
+
+        // 데이터 포인트 (점)
+        const circle2_h = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle2_h.setAttribute('cx', x);
+        circle2_h.setAttribute('cy', y);
+        circle2_h.setAttribute('r', '4');
+        circle2_h.setAttribute('fill', secondaryColor); // 두 번째 시리즈 색상 사용
+        circle2_h.setAttribute('style', `fill: ${secondaryColor}; fill-opacity: 1;`);
+        svg.appendChild(circle2_h);
+
+        // 값 텍스트
+        const valueText2_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        valueText2_h.setAttribute('x', x + 10);
+        valueText2_h.setAttribute('y', y);
+        valueText2_h.setAttribute('text-anchor', 'start');
+        valueText2_h.setAttribute('alignment-baseline', 'middle');
+        valueText2_h.setAttribute('font-size', '10');
+        valueText2_h.textContent = value;
+        svg.appendChild(valueText2_h);
+    });
+   } // <-- if (hasSecondDataset) 블록 끝
+
+     // 범례 추가 (Horizontal)
+        const legendGroup_h = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        // 수직 차트와 동일한 위치(우측 상단)에 배치합니다.
+        legendGroup_h.setAttribute('transform', `translate(${svgWidth - 200}, 40)`);
+        
+        // 첫 번째 시리즈 범례 요소들 (선, 점, 텍스트)
+        const legendLine1_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        legendLine1_h.setAttribute('x1', 0);
+        legendLine1_h.setAttribute('y1', 0);
+        legendLine1_h.setAttribute('x2', 30);
+        legendLine1_h.setAttribute('y2', 0);
+        legendLine1_h.setAttribute('stroke', primaryColor);
+        legendLine1_h.setAttribute('stroke-width', '2');
+        legendGroup_h.appendChild(legendLine1_h);
+        
+        const legendCircle1_h = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        legendCircle1_h.setAttribute('cx', 15);
+        legendCircle1_h.setAttribute('cy', 0);
+        legendCircle1_h.setAttribute('r', '3');
+        legendCircle1_h.setAttribute('fill', primaryColor);
+        legendGroup_h.appendChild(legendCircle1_h);
+        
+        const legendText1_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        legendText1_h.setAttribute('x', 40);
+        legendText1_h.setAttribute('y', 5);
+        legendText1_h.setAttribute('font-size', '12');
+        legendText1_h.textContent = seriesLabels[0]; // CSV 데이터 603의 첫 번째 값 또는 기본값
+        legendGroup_h.appendChild(legendText1_h);
+        
+        // 두 번째 시리즈 범례 (데이터가 있을 경우에만 추가)
+        if (hasSecondDataset) {
+            const legendLine2_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            legendLine2_h.setAttribute('x1', 100); // X 위치를 조정하여 첫 번째 범례 옆에 오도록 합니다.
+            legendLine2_h.setAttribute('y1', 0);
+            legendLine2_h.setAttribute('x2', 130);
+            legendLine2_h.setAttribute('y2', 0);
+            legendLine2_h.setAttribute('stroke', secondaryColor);
+            legendLine2_h.setAttribute('stroke-width', '2');
+            legendGroup_h.appendChild(legendLine2_h);
+        
+            const legendCircle2_h = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            legendCircle2_h.setAttribute('cx', 115); // X 위치 조정
+            legendCircle2_h.setAttribute('cy', 0);
+            legendCircle2_h.setAttribute('r', '3');
+            legendCircle2_h.setAttribute('fill', secondaryColor);
+            legendGroup_h.appendChild(legendCircle2_h);
+        
+            const legendText2_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            legendText2_h.setAttribute('x', 140); // X 위치 조정
+            legendText2_h.setAttribute('y', 5);
+            legendText2_h.setAttribute('font-size', '12');
+            legendText2_h.textContent = seriesLabels[1]; // CSV 데이터 603의 두 번째 값 또는 기본값
+            legendGroup_h.appendChild(legendText2_h);
+        }
+        svg.appendChild(legendGroup_h); // 완성된 범례 그룹 전체를 SVG에 추가합니다.
+  
+      // (여기에 다음 단계 코드가 계속 추가될 예정입니다)
+     } // <-- else 끝
 }
 
   // 비교 차트를 SVG로 렌더링
