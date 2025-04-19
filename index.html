@@ -972,7 +972,9 @@ function renderSimpleComparisonChart(container, data) {
 function renderSimpleProcessDiagram(container, data) {
   const steps = data['601'] || [];
   const descriptions = data['701'] || [];
-  const isHorizontal = data['301'] && data['301'].toLowerCase().includes('horizontal');
+ // const isHorizontal = data['301'] && data['301'].toLowerCase().includes('horizontal');
+  const layout = getLayoutOption(data['301']);
+  const isHorizontal = (layout === 'horizontal');
   const chartTitle = data['401'] || '프로세스 다이어그램';
   const scheme = getColorScheme(data['302']);
   
