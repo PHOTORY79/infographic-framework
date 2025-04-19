@@ -1107,15 +1107,19 @@ function renderSimpleProcessDiagram(container, data) {
     const startX = (svgWidth - boxWidth) / 2;
     
     for (let i = 0; i < steps.length; i++) {
-      const y = 80 + i * (currentBoxHeight + arrowLength);
       const color = scheme[i % scheme.length];
       // 현재 단계의 설명 가져오기 및 줄 수 계산
       const currentDesc = descriptions[i] || '';
       const descLines = currentDesc.split('\\n');
       const descLineCount = descLines.length;
+
+      // lineHeight 선언 (★★ 여기로 이동 ★★)
+      const lineHeight = 16;
   
       // 박스 높이 계산 (제목 1줄 + 설명 줄 수 + 패딩 고려)
       const currentBoxHeight = (1 + descLineCount) * lineHeight + verticalPad;
+      // y 선언 (위치 이동됨!)
+      const y = 80 + i * (currentBoxHeight + arrowLength);
       
       // 프로세스 박스
       const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -1142,7 +1146,6 @@ function renderSimpleProcessDiagram(container, data) {
       // 설명 텍스트 (줄바꿈 처리)
       if (descriptions[i]) {
         const descLines = descriptions[i].split('\\n');
-        const lineHeight = 16;
         
         for (let j = 0; j < descLines.length; j++) {
           if (j < 3) { // 최대 3줄로 제한
