@@ -1062,6 +1062,7 @@ function renderSimpleProcessDiagram(container, data) {
      // 설명 텍스트 (줄바꿈 처리 - tspan 사용)
         if (descriptions[i]) {
           const descLines = descriptions[i].split('\\n'); // '\n' 기준으로 줄 나누기
+          console.log(`Step ${i}: Description lines =`, descLines); // <-- 로그 추가
 
           if (descLines.length > 0) {
             const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -1081,9 +1082,10 @@ function renderSimpleProcessDiagram(container, data) {
                 tspanElement.setAttribute('dy', '1.2em'); 
               }
               tspanElement.textContent = line; // 현재 줄 텍스트 설정
+              console.log(`  Line ${j}: tspan attrs =`, { x: tspanElement.getAttribute('x'), dy: tspanElement.getAttribute('dy'), text: line }); // <-- 로그 추가
               textElement.appendChild(tspanElement); // text 요소에 tspan 추가
             });
-
+            console.log(`  Parent text attrs =`, { x: textElement.getAttribute('x'), y: textElement.getAttribute('y'), anchor: textElement.getAttribute('text-anchor') }); // <-- 로그 추가
             svg.appendChild(textElement); // 완성된 text 요소 SVG에 추가
           }
         }
