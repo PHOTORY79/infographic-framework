@@ -864,7 +864,7 @@ for (let i = 0; i <= gridLines; i++) {
     const yStep_h = chartHeight / (xLabels.length - 1 || 1); // 각 항목 레이블 간의 세로 간격을 계산합니다.
     xLabels.forEach((label, i) => {
     // 현재 레이블이 위치할 Y 좌표를 계산합니다.
-    const y = paddingY + i * yStep_h;
+    const y = paddingY + chartHeight - (i * yStep_h);
 
     // 세로축 레이블 텍스트 요소를 생성합니다.
     const yLabel_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -883,7 +883,7 @@ for (let i = 0; i <= gridLines; i++) {
     // --- 추가할 코드 (1/2): 선 경로 계산 ---
   dataset.forEach((value, i) => {
     if (i >= xLabels.length) return; // 레이블 개수만큼만 처리
-    const y = paddingY + i * yStep_h; // Y 좌표 (항목 순서 기준)
+    const y = paddingY + chartHeight - (i * yStep_h); // Y 좌표 (항목 순서 기준)
     const xValue = Number(value) || 0;
     const normalizedValue = (maxValue - minValue === 0) ? 0 : (xValue - minValue) / (maxValue - minValue);
     const x = paddingX + normalizedValue * chartWidth; // X 좌표 (값 기준)
@@ -906,7 +906,7 @@ for (let i = 0; i <= gridLines; i++) {
     if (i >= xLabels.length) return;
 
     // Y 좌표 계산 (선 그리기 로직과 동일)
-    const y = paddingY + i * yStep_h;
+    const y = paddingY + chartHeight - (i * yStep_h);
 
     // X 좌표 계산 (선 그리기 로직과 동일)
     const xValue = Number(value) || 0;
@@ -942,7 +942,7 @@ for (let i = 0; i <= gridLines; i++) {
     dataset2.forEach((value, i) => {
         if (i >= xLabels.length) return; // 항목 레이블 개수만큼만 그립니다.
         // Y 좌표 계산 (첫 번째 데이터셋과 동일)
-        const y = paddingY + i * yStep_h;
+        const y = paddingY + chartHeight - (i * yStep_h);
         // X 좌표 계산 (첫 번째 데이터셋과 동일)
         const xValue = Number(value) || 0;
         const normalizedValue = (maxValue - minValue === 0) ? 0 : (xValue - minValue) / (maxValue - minValue);
@@ -962,7 +962,7 @@ for (let i = 0; i <= gridLines; i++) {
     dataset2.forEach((value, i) => {
         if (i >= xLabels.length) return;
         // Y 좌표 계산 (첫 번째 데이터셋과 동일)
-        const y = paddingY + i * yStep_h;
+        const y = paddingY + chartHeight - (i * yStep_h);
          // X 좌표 계산 (첫 번째 데이터셋과 동일)
         const xValue = Number(value) || 0;
         const normalizedValue = (maxValue - minValue === 0) ? 0 : (xValue - minValue) / (maxValue - minValue);
