@@ -175,34 +175,37 @@ window.addEventListener('load', function() {
   console.log('페이지 로드 완료');
   
   // CSV 파싱 함수 직접 구현
-  function parseCSVData(csvText) {
+ function parseCSVData(csvText) {
   const result = { data: {} };
-  const lines = csvText.split(/\r?\n/);
-  let buffer = '',
-      currentId = null;
+  const rawLines = csvText.split(/\r?\n/);
+  let buffer = '';
+  let currentId = null;
 
-  for (let rawLine of lines) {
-    // 새 속성 시작?
+  rawLines.forEach((rawLine, index) => {
+    // 새 속성 시작? (ID,값 분리)
     if (currentId === null) {
       const commaIdx = rawLine.indexOf(',');
-      if (commaIdx === -1) continue;
+      if (commaIdx === -1) return;
       currentId = rawLine.slice(0, commaIdx).trim();
-      buffer    = rawLine.slice(commaIdx + 1).trim();
+      buffer = rawLine.slice(commaIdx + 1).trim();
     } else {
       // 멀티라인 JSON 배열 계속 누적
-      buffer += '\n' + rawLine.trim();
+      buffer += rawLine.trim();
     }
 
-    // 배열 끝인지 체크
-    if (buffer.startsWith('[') && !buffer.trim().endsWith(']')) {
-      continue;
+    // 배열 끝인지 체크 (']'로 끝나야)
+    if (buffer.startsWith('[') && !buffer.endsWith(']')) {
+      return; // 아직 끝 아님
     }
 
     // 값 파싱
     let value;
     if (buffer.startsWith('[')) {
-      try { value = JSON.parse(buffer); }
-      catch { value = buffer; }
+      try {
+        value = JSON.parse(buffer);
+      } catch {
+        value = buffer;
+      }
     } else if (buffer.startsWith('"') && buffer.endsWith('"')) {
       value = buffer.slice(1, -1);
     } else {
@@ -211,57 +214,13 @@ window.addEventListener('load', function() {
 
     result.data[currentId] = value;
     currentId = null;
-    buffer    = '';
-  }
+    buffer = '';
+  });
 
   console.log('파싱된 CSV 데이터:', result.data);
   return result;
 }
 
-    
-      // ─────────── 멀티라인 JSON 배열 지원 파싱 로직 ───────────
-  const rawLines = csvText.split(/\r?\n/);
-  let buffer = '';
-  rawLines.forEach((line, index) => {
-    // 이전에 읽던 JSON 배열 중인지, 새 배열이 아직 끝나지 않았는지 체크
-    if (buffer || (/^\d+,\s*\[/.test(line) && !line.trim().endsWith(']'))) {
-      buffer += line.trim();
-      if (line.trim().endsWith(']')) {
-        line = buffer;
-        buffer = '';
-      } else {
-        return; // 배열이 끝나지 않았으므로 다음 줄로
-      }
-    }
-
-    const firstCommaIndex = line.indexOf(',');
-    if (firstCommaIndex === -1) {
-      console.warn(`라인 ${index + 1}: 쉼표가 없습니다.`);
-      return;
-    }
-    const id    = line.substring(0, firstCommaIndex).trim();
-    let value   = line.substring(firstCommaIndex + 1).trim();
-
-    if (value.startsWith('[') && value.endsWith(']')) {
-      try {
-        result.data[id] = JSON.parse(value);
-      } catch (e) {
-        console.error(`JSON 파싱 오류 (ID: ${id}):`, e);
-        result.data[id] = value;
-      }
-    } else if (value.startsWith('"') && value.endsWith('"')) {
-      result.data[id] = value.slice(1, -1);
-    } else {
-      result.data[id] = value;
-    }
-  });
-  // ─────────────────────────────────────────────────────────────
-
-    
-    console.log('파싱된 CSV 데이터:', result.data);
-    return result;
-  }
-  
   // 간단한 인포그래픽 렌더링 함수
   function renderSimpleChart(container, data) {
     // 컨테이너 초기화
