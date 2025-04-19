@@ -559,6 +559,10 @@ function renderSimpleLineChart(container, data) {
   const hasSecondDataset = Array.isArray(dataset2) && dataset2.length > 0;
   const seriesLabels = data['603'] || ['시리즈 1', '시리즈 2'];
   const chartTitle = data['401'] || '라인 차트';
+  // 레이아웃 방향 결정 (추가)
+  const layout = getLayoutOption(data['301']); // 'vertical', 'horizontal', or 'default'
+  const isHorizontal = (layout === 'horizontal');
+  console.log('Line chart layout:', isHorizontal ? 'Horizontal' : 'Vertical'); // 디버깅 로그
   
   // 데이터의 302(색상 스키마) 값을 받아 팔레트 얻기
   const colors = getColorScheme(data['302']);
@@ -605,8 +609,9 @@ function renderSimpleLineChart(container, data) {
   maxValue = Math.ceil(maxValue * 1.1); // 약간의 여유 공간
   
   // 그리드 라인 및 Y축 레이블
-  const gridLines = 5;
-  for (let i = 0; i <= gridLines; i++) {
+  if if (!isHorizontal) { // <-- if 시작
+    const gridLines = 5;
+    for (let i = 0; i <= gridLines; i++) {
     const y = paddingY + chartHeight - (i / gridLines) * chartHeight;
     const value = minValue + (i / gridLines) * (maxValue - minValue);
     
@@ -629,7 +634,7 @@ function renderSimpleLineChart(container, data) {
     yLabel.setAttribute('font-size', '12');
     yLabel.textContent = Math.round(value);
     svg.appendChild(yLabel);
-  }
+   }
   
   // X축 라인
   const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -653,6 +658,7 @@ function renderSimpleLineChart(container, data) {
     xLabel.textContent = label;
     svg.appendChild(xLabel);
   });
+} // <-- if 끝
   
   // 첫 번째 데이터셋 라인
   const linePath1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
