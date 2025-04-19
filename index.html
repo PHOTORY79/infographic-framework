@@ -1010,19 +1010,23 @@ function renderSimpleProcessDiagram(container, data) {
   
   if (isHorizontal) {
     // 수평 프로세스 다이어그램
-    const boxWidth = 120;
-    const boxHeight = 80;
-    const arrowLength = 40;
-    const startY = 100;
+    const boxWidth       = 120;
+    const arrowLength    = 40;
+    const centerY        = 100;        // 원래 startY 역할
+    const lineHeight     = 16;         // 한 줄 텍스트 높이
+    const verticalPad    = 16;         // 위아래 여백 합
     
     for (let i = 0; i < steps.length; i++) {
+      const descCount = descriptions[i] ? descriptions[i].split('\n').length : 1;
+      const boxHeight = descCount * lineHeight + verticalPad;
+      const boxY      = centerY - boxHeight/2;
       const x = 60 + i * (boxWidth + arrowLength);
       const color = scheme[i % scheme.length];
       
       // 프로세스 박스
       const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       box.setAttribute('x', x);
-      box.setAttribute('y', startY);
+      box.setAttribute('y', boxY);
       box.setAttribute('width', boxWidth);
       box.setAttribute('height', boxHeight);
       box.setAttribute('rx', '6');
