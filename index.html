@@ -982,7 +982,7 @@ function renderSimpleProcessDiagram(container, data) {
   
   // SVG 크기 설정 (가로형/세로형에 따라 다르게)
   const svgWidth = isHorizontal ? 900 : 600;
-  const svgHeight = isHorizontal ? 400 : Math.max(400, steps.length * 120);
+  const svgHeight = isHorizontal ? 700 : Math.max(400, steps.length * 120);
   
   // SVG 요소 생성
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1067,7 +1067,7 @@ function renderSimpleProcessDiagram(container, data) {
         for (let j = 0; j < descLines.length; j++) {
           const descText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           descText.setAttribute('x', x + boxWidth / 2);
-          descText.setAttribute('y', boxY + 45 + j * lineHeight);
+          descText.setAttribute('y', boxY + currentBoxHeight + 20 + j * lineHeight);
           descText.setAttribute('text-anchor', 'middle');
           descText.setAttribute('font-size', '12');
           descText.textContent = descLines[j];
