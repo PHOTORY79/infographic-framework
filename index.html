@@ -1063,10 +1063,17 @@ function renderSimpleComparisonChart(container, data) {
     ...valuesA.map(v=>+v||0),
     ...valuesB.map(v=>+v||0)
   );
-
+  // 레이아웃 옵션 읽기 (getLayoutOption 헬퍼 함수 사용)
+  const layout = getLayoutOption(data['301']); // 예: 'side-by-side', 'split-screen', 'default' 등 예상
+  console.log('Comparison chart layout:', layout); // 실제 어떤 레이아웃 값이 읽혔는지 콘솔에 출력 (디버깅용)
+   
   // 컨테이너 초기화
   container.innerHTML = '';
   
+  // layout 값에 따라 분기 시작
+  if (layout === 'vertical' || layout === 'default') {
+    console.log('Rendering comparison chart as: Side-by-Side Vertical Bars'); // 임시 확인용 로그
+
   // SVG 크기 설정
   const svgWidth = 800;
   const svgHeight = 500;
@@ -1205,6 +1212,190 @@ function renderSimpleComparisonChart(container, data) {
   legendTextB.setAttribute('font-size', '12');
   legendTextB.textContent = series[1];
   svg.appendChild(legendTextB);
+    
+  } else if (layout === 'horizontal') {
+     // --- 수평 비교 차트 (Horizontal Side-by-Side Bars) 로직 시작 ---
+
+      // 1. 축 그리기
+      
+      // 세로축 (항목/카테고리 축) - Y축 역할
+      const yAxis_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      yAxis_h.setAttribute('x1', paddingX);                 // 왼쪽 시작 X
+      yAxis_h.setAttribute('y1', paddingY);                 // 위쪽 시작 Y
+      yAxis_h.setAttribute('x2', paddingX);                 // 왼쪽 끝 X (수직선)
+      yAxis_h.setAttribute('y2', paddingY + chartHeight); // 아래쪽 끝 Y
+      yAxis_h.setAttribute('stroke', '#333');               // 축 색상
+      yAxis_h.setAttribute('stroke-width', '1');            // 축 두께
+      svg.appendChild(yAxis_h);                             // SVG에 추가
+      
+      // 가로축 (값 축) - X축 역할
+      const xAxis_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      xAxis_h.setAttribute('x1', paddingX);                 // 왼쪽 시작 X
+      xAxis_h.setAttribute('y1', paddingY + chartHeight); // 아래쪽 시작 Y
+      xAxis_h.setAttribute('x2', paddingX + chartWidth);  // 오른쪽 끝 X
+      xAxis_h.setAttribute('y2', paddingY + chartHeight); // 아래쪽 끝 Y (수평선)
+      xAxis_h.setAttribute('stroke', '#333');               // 축 색상
+      xAxis_h.setAttribute('stroke-width', '1');            // 축 두께
+      svg.appendChild(xAxis_h);                             // SVG에 추가
+
+       const gridLines = 5; // 5개의 그리드 라인/눈금 구간을 사용합니다.
+   for (let i = 0; i <= gridLines; i++) {
+      // 현재 눈금/그리드 라인이 위치할 X 좌표를 계산합니다.
+      const x = paddingX + (i / gridLines) * chartWidth;
+      // 현재 눈금에 해당하는 값을 계산합니다. (0부터 maxValue까지)
+      const value = (i / gridLines) * maxValue;
+  
+      // 세로 그리드 라인 생성
+      const gridLine_h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      gridLine_h.setAttribute('x1', x);
+      gridLine_h.setAttribute('y1', paddingY); // 차트 영역 상단에서 시작
+      gridLine_h.setAttribute('x2', x);
+      gridLine_h.setAttribute('y2', paddingY + chartHeight); // 차트 영역 하단까지
+      gridLine_h.setAttribute('stroke', '#e0e0e0'); // 그리드 라인 색상
+      gridLine_h.setAttribute('stroke-width', '1'); // 그리드 라인 두께
+      svg.appendChild(gridLine_h);
+  
+      // 가로축 (값) 레이블 생성
+      const xLabel_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      xLabel_h.setAttribute('x', x); // 해당 눈금의 X 좌표
+      xLabel_h.setAttribute('y', paddingY + chartHeight + 20); // 가로축 선보다 20px 아래
+      xLabel_h.setAttribute('text-anchor', 'middle'); // 텍스트 중앙 정렬
+      xLabel_h.setAttribute('font-size', '12'); // 글자 크기
+      // 값의 크기에 따라 소수점 표시 여부 결정 (간단한 방식)
+      xLabel_h.textContent = maxValue < 10 && maxValue > 0 ? value.toFixed(1) : Math.round(value);
+      svg.appendChild(xLabel_h);
+  }
+
+      // 세로축 (항목/카테고리) 레이블 추가
+      const groupHeight = chartHeight / (labels.length || 1); // 각 항목(카테고리) 그룹이 차지할 세로 높이를 계산합니다. (0으로 나누는 오류 방지)
+      labels.forEach((label, i) => {
+      // 현재 레이블이 위치할 Y 좌표를 계산합니다. (각 그룹의 세로 중앙 지점)
+      const y = paddingY + i * groupHeight + groupHeight / 2;
+  
+      // 세로축 레이블 텍스트 요소를 생성합니다.
+      const yLabel_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      yLabel_h.setAttribute('x', paddingX - 10); // 세로축 선(yAxis_h)보다 10px 왼쪽에 위치시킵니다.
+      yLabel_h.setAttribute('y', y);             // 위에서 계산한 Y 좌표 (그룹의 중앙)에 배치합니다.
+      yLabel_h.setAttribute('text-anchor', 'end'); // 텍스트의 끝(오른쪽)을 기준점(x 좌표)에 맞춰 정렬합니다.
+      yLabel_h.setAttribute('alignment-baseline', 'middle'); // 텍스트의 세로 중앙을 기준점(y 좌표)에 맞춥니다.
+      yLabel_h.setAttribute('font-size', '12'); // 글자 크기를 설정합니다.
+      yLabel_h.textContent = label; // labels 배열에서 가져온 실제 항목 텍스트를 표시합니다.
+      svg.appendChild(yLabel_h); // 생성한 레이블을 SVG에 추가합니다.
+    });
+
+      // 4. 가로 막대 및 값 레이블 그리기
+
+      // 각 항목 그룹 내에서 막대의 높이와 막대 간 간격을 계산합니다.
+      // groupHeight는 이전 단계(세로축 레이블 추가)에서 이미 계산되었습니다.
+      const barHeight = groupHeight / 3; // 각 막대의 높이를 그룹 높이의 1/3로 설정
+      const barSpacing = barHeight / 2;  // A 막대와 B 막대 사이의 수직 간격
+  
+      // 각 항목(label)에 대해 루프를 실행합니다.
+     for (let i = 0; i < labels.length; i++) {
+      // 현재 항목 그룹의 시작 Y 좌표
+      const yGroupStart = paddingY + i * groupHeight;
+      // A 막대의 Y 좌표 계산 (그룹 내에서 약간 위쪽에 위치)
+      const yA = yGroupStart + (groupHeight / 2) - barHeight - (barSpacing / 2); // 그룹 중앙보다 위쪽
+      // B 막대의 Y 좌표 계산 (A 막대 바로 아래에 간격을 두고 위치)
+      const yB = yA + barHeight + barSpacing;
+  
+      // --- 데이터 A (첫 번째 데이터셋) 막대 및 레이블 ---
+      const valueA = Number(valuesA[i] || 0); // 현재 항목의 A 값
+      // 값에 비례하는 막대 너비 계산 (maxValue가 0이면 너비도 0)
+      const widthA = maxValue === 0 ? 0 : (valueA / maxValue) * chartWidth;
+  
+      // A 막대 (rect 요소) 생성
+      const barA_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      barA_h.setAttribute('x', paddingX);      // 모든 막대는 왼쪽 축(paddingX)에서 시작
+      barA_h.setAttribute('y', yA);            // 계산된 A 막대의 Y 위치
+      barA_h.setAttribute('width', widthA);    // 계산된 A 막대의 너비
+      barA_h.setAttribute('height', barHeight);// 위에서 정의한 막대 높이
+      barA_h.setAttribute('fill', primaryColor); // 첫 번째 시리즈 색상 사용
+      svg.appendChild(barA_h);                 // SVG에 A 막대 추가
+  
+      // A 값 레이블 (text 요소) 생성
+      const labelA_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      labelA_h.setAttribute('x', paddingX + widthA + 5); // 막대 끝에서 오른쪽으로 5px 이동
+      labelA_h.setAttribute('y', yA + barHeight / 2);    // 막대의 세로 중앙 위치
+      labelA_h.setAttribute('text-anchor', 'start');     // 텍스트 시작점을 x 좌표에 맞춤
+      labelA_h.setAttribute('alignment-baseline', 'middle'); // 텍스트 세로 중앙 정렬
+      labelA_h.setAttribute('font-size', '12');          // 글자 크기
+      labelA_h.textContent = valueA;                     // 실제 A 값 표시
+      svg.appendChild(labelA_h);                         // SVG에 A 값 레이블 추가
+  
+      // --- 데이터 B (두 번째 데이터셋) 막대 및 레이블 ---
+      const valueB = Number(valuesB[i] || 0); // 현재 항목의 B 값
+      // 값에 비례하는 막대 너비 계산
+      const widthB = maxValue === 0 ? 0 : (valueB / maxValue) * chartWidth;
+  
+      // B 막대 (rect 요소) 생성
+      const barB_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      barB_h.setAttribute('x', paddingX);
+      barB_h.setAttribute('y', yB);            // 계산된 B 막대의 Y 위치
+      barB_h.setAttribute('width', widthB);    // 계산된 B 막대의 너비
+      barB_h.setAttribute('height', barHeight);
+      barB_h.setAttribute('fill', secondaryColor); // 두 번째 시리즈 색상 사용
+      svg.appendChild(barB_h);
+  
+      // B 값 레이블 (text 요소) 생성
+      const labelB_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      labelB_h.setAttribute('x', paddingX + widthB + 5); // 막대 끝에서 오른쪽으로 5px 이동
+      labelB_h.setAttribute('y', yB + barHeight / 2);    // 막대의 세로 중앙 위치
+      labelB_h.setAttribute('text-anchor', 'start');
+      labelB_h.setAttribute('alignment-baseline', 'middle');
+      labelB_h.setAttribute('font-size', '12');
+      labelB_h.textContent = valueB;                     // 실제 B 값 표시
+      svg.appendChild(labelB_h);
+  }
+      // 5. 범례 추가 (Horizontal)
+
+      // 범례를 감싸는 흰색 배경 상자 (테두리 포함)
+      const legendBox_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      legendBox_h.setAttribute('x', svgWidth - 150); // 범례 상자 X 좌표 (우측 정렬)
+      legendBox_h.setAttribute('y', 50);            // 범례 상자 Y 좌표 (상단에서 50px 아래)
+      legendBox_h.setAttribute('width', 120);       // 범례 상자 너비
+      legendBox_h.setAttribute('height', 50);       // 범례 상자 높이
+      legendBox_h.setAttribute('fill', 'white');    // 배경색 흰색
+      legendBox_h.setAttribute('stroke', '#ddd');   // 테두리색 연한 회색
+      legendBox_h.setAttribute('stroke-width', '1');
+      svg.appendChild(legendBox_h);
+      
+      // 첫 번째 시리즈 (A) 범례 항목 (색상 사각형 + 텍스트)
+      const legendA_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      legendA_h.setAttribute('x', svgWidth - 140); // 상자 내부 X 좌표
+      legendA_h.setAttribute('y', 60);            // 상자 내부 Y 좌표
+      legendA_h.setAttribute('width', 15);        // 색상 사각형 너비
+      legendA_h.setAttribute('height', 15);       // 색상 사각형 높이
+      legendA_h.setAttribute('fill', primaryColor); // 시리즈 A 색상
+      svg.appendChild(legendA_h);
+      
+      const legendTextA_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      legendTextA_h.setAttribute('x', svgWidth - 120); // 텍스트 X 좌표 (사각형 오른쪽)
+      legendTextA_h.setAttribute('y', 72);            // 텍스트 Y 좌표 (사각형과 높이 맞춤)
+      legendTextA_h.setAttribute('font-size', '12');
+      legendTextA_h.textContent = series[0];        // 시리즈 A 이름 (CSV 603 또는 기본값 'A')
+      svg.appendChild(legendTextA_h);
+      
+      // 두 번째 시리즈 (B) 범례 항목 (색상 사각형 + 텍스트)
+      const legendB_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      legendB_h.setAttribute('x', svgWidth - 140); // 상자 내부 X 좌표
+      legendB_h.setAttribute('y', 80);            // 상자 내부 Y 좌표 (A 범례 아래)
+      legendB_h.setAttribute('width', 15);
+      legendB_h.setAttribute('height', 15);
+      legendB_h.setAttribute('fill', secondaryColor); // 시리즈 B 색상
+      svg.appendChild(legendB_h);
+      
+      const legendTextB_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      legendTextB_h.setAttribute('x', svgWidth - 120); // 텍스트 X 좌표
+      legendTextB_h.setAttribute('y', 92);            // 텍스트 Y 좌표 (A 범례 아래)
+      legendTextB_h.setAttribute('font-size', '12');
+      legendTextB_h.textContent = series[1];        // 시리즈 B 이름 (CSV 603 또는 기본값 'B')
+      svg.appendChild(legendTextB_h);
+  
+  } //<-- if 끝
+  // 참고: 현재 getLayoutOption 함수는 'vertical', 'horizontal', 'default' 중 하나만 반환하므로,
+  // 모든 경우를 처리하기 위한 별도의 else 블록은 필수는 아닐 수 있습니다.
+  
 }
   
  // 프로세스 다이어그램을 SVG로 렌더링
