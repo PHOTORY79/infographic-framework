@@ -1352,7 +1352,7 @@ function renderSimpleComparisonChart(container, data) {
 
       // 범례를 감싸는 흰색 배경 상자 (테두리 포함)
       const legendBox_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      legendBox_h.setAttribute('x', svgWidth - 90); // 범례 상자 X 좌표 (우측 정렬)
+      legendBox_h.setAttribute('x', svgWidth - 50); // 범례 상자 X 좌표 (우측 정렬)
       legendBox_h.setAttribute('y', 50);            // 범례 상자 Y 좌표 (상단에서 50px 아래)
       legendBox_h.setAttribute('width', 120);       // 범례 상자 너비
       legendBox_h.setAttribute('height', 50);       // 범례 상자 높이
@@ -1363,7 +1363,7 @@ function renderSimpleComparisonChart(container, data) {
       
       // 첫 번째 시리즈 (A) 범례 항목 (색상 사각형 + 텍스트)
       const legendA_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      legendA_h.setAttribute('x', svgWidth - 80); // 상자 내부 X 좌표
+      legendA_h.setAttribute('x', svgWidth - 40); // 상자 내부 X 좌표
       legendA_h.setAttribute('y', 60);            // 상자 내부 Y 좌표
       legendA_h.setAttribute('width', 15);        // 색상 사각형 너비
       legendA_h.setAttribute('height', 15);       // 색상 사각형 높이
@@ -1371,7 +1371,7 @@ function renderSimpleComparisonChart(container, data) {
       svg.appendChild(legendA_h);
       
       const legendTextA_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      legendTextA_h.setAttribute('x', svgWidth - 60); // 텍스트 X 좌표 (사각형 오른쪽)
+      legendTextA_h.setAttribute('x', svgWidth - 20); // 텍스트 X 좌표 (사각형 오른쪽)
       legendTextA_h.setAttribute('y', 72);            // 텍스트 Y 좌표 (사각형과 높이 맞춤)
       legendTextA_h.setAttribute('font-size', '12');
       legendTextA_h.textContent = series[0];        // 시리즈 A 이름 (CSV 603 또는 기본값 'A')
@@ -1379,7 +1379,7 @@ function renderSimpleComparisonChart(container, data) {
       
       // 두 번째 시리즈 (B) 범례 항목 (색상 사각형 + 텍스트)
       const legendB_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      legendB_h.setAttribute('x', svgWidth - 80); // 상자 내부 X 좌표
+      legendB_h.setAttribute('x', svgWidth - 40); // 상자 내부 X 좌표
       legendB_h.setAttribute('y', 80);            // 상자 내부 Y 좌표 (A 범례 아래)
       legendB_h.setAttribute('width', 15);
       legendB_h.setAttribute('height', 15);
@@ -1387,7 +1387,7 @@ function renderSimpleComparisonChart(container, data) {
       svg.appendChild(legendB_h);
       
       const legendTextB_h = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      legendTextB_h.setAttribute('x', svgWidth - 60); // 텍스트 X 좌표
+      legendTextB_h.setAttribute('x', svgWidth - 20); // 텍스트 X 좌표
       legendTextB_h.setAttribute('y', 92);            // 텍스트 Y 좌표 (A 범례 아래)
       legendTextB_h.setAttribute('font-size', '12');
       legendTextB_h.textContent = series[1];        // 시리즈 B 이름 (CSV 603 또는 기본값 'B')
