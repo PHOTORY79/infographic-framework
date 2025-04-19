@@ -1063,6 +1063,15 @@ function renderSimpleComparisonChart(container, data) {
     ...valuesA.map(v=>+v||0),
     ...valuesB.map(v=>+v||0)
   );
+  
+  // SVG 크기 설정
+  const svgWidth = 800;
+  const svgHeight = 500;
+  const paddingX = 60;
+  const paddingY = 80;
+  const chartWidth = svgWidth - 2 * paddingX;
+  const chartHeight = svgHeight - 2 * paddingY;
+  
   // 레이아웃 옵션 읽기 (getLayoutOption 헬퍼 함수 사용)
   const layout = getLayoutOption(data['301']); // 예: 'side-by-side', 'split-screen', 'default' 등 예상
   console.log('Comparison chart layout:', layout); // 실제 어떤 레이아웃 값이 읽혔는지 콘솔에 출력 (디버깅용)
@@ -1073,14 +1082,6 @@ function renderSimpleComparisonChart(container, data) {
   // layout 값에 따라 분기 시작
   if (layout === 'vertical' || layout === 'default') {
     console.log('Rendering comparison chart as: Side-by-Side Vertical Bars'); // 임시 확인용 로그
-
-  // SVG 크기 설정
-  const svgWidth = 800;
-  const svgHeight = 500;
-  const paddingX = 60;
-  const paddingY = 80;
-  const chartWidth = svgWidth - 2 * paddingX;
-  const chartHeight = svgHeight - 2 * paddingY;
   
   // SVG 요소 생성
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
