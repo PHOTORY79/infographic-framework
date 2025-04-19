@@ -185,38 +185,44 @@ window.addEventListener('load', function() {
       return result;
     }
     
-    const lines = csvText.split(/\r?\n/).filter(line => line.trim());
-    
-    lines.forEach((line, index) => {
-      // 첫 번째 쉼표 위치 찾기
-      const firstCommaIndex = line.indexOf(',');
-      
-      if (firstCommaIndex === -1) {
-        console.warn(`라인 ${index + 1}: 쉼표가 없습니다.`);
-        return;
-      }
-      
-      // ID와 값 분리
-      const id = line.substring(0, firstCommaIndex).trim();
-      const value = line.substring(firstCommaIndex + 1).trim();
-      
-      // 값이 JSON 배열인지 확인 및 파싱
-      if (value.startsWith('[') && value.endsWith(']')) {
-        try {
-          result.data[id] = JSON.parse(value);
-        } catch (error) {
-          console.error(`JSON 파싱 오류 (ID: ${id}):`, error);
-          result.data[id] = value; // 파싱 실패 시 원래 값 사용
-        }
+      // ─────────── 멀티라인 JSON 배열 지원 파싱 로직 ───────────
+  const rawLines = csvText.split(/\r?\n/);
+  let buffer = '';
+  rawLines.forEach((line, index) => {
+    // 이전에 읽던 JSON 배열 중인지, 새 배열이 아직 끝나지 않았는지 체크
+    if (buffer || (/^\d+,\s*\[/.test(line) && !line.trim().endsWith(']'))) {
+      buffer += line.trim();
+      if (line.trim().endsWith(']')) {
+        line = buffer;
+        buffer = '';
       } else {
-        // 따옴표로 감싸진 문자열에서 따옴표 제거
-        if (value.startsWith('"') && value.endsWith('"')) {
-          result.data[id] = value.substring(1, value.length - 1);
-        } else {
-          result.data[id] = value;
-        }
+        return; // 배열이 끝나지 않았으므로 다음 줄로
       }
-    });
+    }
+
+    const firstCommaIndex = line.indexOf(',');
+    if (firstCommaIndex === -1) {
+      console.warn(`라인 ${index + 1}: 쉼표가 없습니다.`);
+      return;
+    }
+    const id    = line.substring(0, firstCommaIndex).trim();
+    let value   = line.substring(firstCommaIndex + 1).trim();
+
+    if (value.startsWith('[') && value.endsWith(']')) {
+      try {
+        result.data[id] = JSON.parse(value);
+      } catch (e) {
+        console.error(`JSON 파싱 오류 (ID: ${id}):`, e);
+        result.data[id] = value;
+      }
+    } else if (value.startsWith('"') && value.endsWith('"')) {
+      result.data[id] = value.slice(1, -1);
+    } else {
+      result.data[id] = value;
+    }
+  });
+  // ─────────────────────────────────────────────────────────────
+
     
     console.log('파싱된 CSV 데이터:', result.data);
     return result;
