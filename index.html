@@ -1167,7 +1167,9 @@ function renderSimpleTimeline(container, data) {
   const events = data['601'] || [];
   const titles = data['701'] || [];
   const descriptions = data['702'] || [];
-  const isVertical = data['301'] && data['301'].toLowerCase().includes('vertical');
+ // const isVertical = data['301'] && data['301'].toLowerCase().includes('vertical');
+  const layout = getLayoutOption(data['301']);
+  const isVertical = (layout === 'vertical');
   const chartTitle = data['401'] || '타임라인';
   const scheme = getColorScheme(data['302']);
   
