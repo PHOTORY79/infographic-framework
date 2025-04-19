@@ -1222,7 +1222,7 @@ function renderSimpleTimeline(container, data) {
     
     for (let i = 0; i < events.length; i++) {
       const y = startY + i * itemHeight;
-      const color = getColor(i);
+      const color = getPaletteColor(i, data['302']);
       const isRight = i % 2 === 0; // 왼쪽/오른쪽 번갈아가며 배치
       
       // 이벤트 원
