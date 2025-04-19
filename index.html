@@ -1011,9 +1011,9 @@ function renderSimpleProcessDiagram(container, data) {
     const lineHeight  = 16;                                 
     const verticalPad = 20;                                
     const descCounts  = descriptions.map(d => d.split('\n').length);
-    const boxHeight   = Math.max(...descCounts) * lineHeight + verticalPad;
+  //  const boxHeight   = Math.max(...descCounts) * lineHeight + verticalPad;
     const centerY     = 100;
-    const boxY        = centerY - boxHeight / 2;
+  //  const boxY        = centerY - boxHeight / 2;
     
     if (isHorizontal) {
       // 수평 프로세스 다이어그램
@@ -1031,13 +1031,21 @@ function renderSimpleProcessDiagram(container, data) {
       const boxY      = centerY - boxHeight/2;
       const x = 60 + i * (boxWidth + arrowLength);
       const color = scheme[i % scheme.length];
+      // 현재 단계의 설명 가져오기 및 줄 수 계산
+      const currentDesc = descriptions[i] || '';
+      const descLines = currentDesc.split('\\n');
+      const descLineCount = descLines.length;
+  
+      // 박스 높이 계산 (제목 1줄 + 설명 줄 수 + 패딩 고려)
+      const currentBoxHeight = (1 + descLineCount) * lineHeight + verticalPad;
+      const boxY = centerY - currentBoxHeight / 2; // 박스의 Y 좌표 계산
       
       // 프로세스 박스
       const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       box.setAttribute('x', x);
       box.setAttribute('y', boxY);
       box.setAttribute('width', boxWidth);
-      box.setAttribute('height', boxHeight);
+      box.setAttribute('height', currentBoxHeight);
       box.setAttribute('rx', '6');
       box.setAttribute('ry', '6');
       box.setAttribute('fill', color);
@@ -1046,7 +1054,7 @@ function renderSimpleProcessDiagram(container, data) {
       // 단계 텍스트
       const stepText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       stepText.setAttribute('x', x + boxWidth / 2);
-      stepText.setAttribute('y', startY + boxHeight / 2);
+      stepText.setAttribute('y', boxY + 25);
       stepText.setAttribute('text-anchor', 'middle');
       stepText.setAttribute('dominant-baseline', 'middle');
       stepText.setAttribute('fill', 'white');
@@ -1098,20 +1106,27 @@ function renderSimpleProcessDiagram(container, data) {
   } else {
     // 수직 프로세스 다이어그램
     const boxWidth = 300;
-    const boxHeight = 80;
+   // const boxHeight = 80;
     const arrowLength = 40;
     const startX = (svgWidth - boxWidth) / 2;
     
     for (let i = 0; i < steps.length; i++) {
-      const y = 80 + i * (boxHeight + arrowLength);
+      const y = 80 + i * (currentBoxHeight + arrowLength);
       const color = scheme[i % scheme.length];
+      // 현재 단계의 설명 가져오기 및 줄 수 계산
+      const currentDesc = descriptions[i] || '';
+      const descLines = currentDesc.split('\\n');
+      const descLineCount = descLines.length;
+  
+      // 박스 높이 계산 (제목 1줄 + 설명 줄 수 + 패딩 고려)
+      const currentBoxHeight = (1 + descLineCount) * lineHeight + verticalPad;
       
       // 프로세스 박스
       const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       box.setAttribute('x', startX);
       box.setAttribute('y', y);
       box.setAttribute('width', boxWidth);
-      box.setAttribute('height', boxHeight);
+      box.setAttribute('height', currentBoxHeight);
       box.setAttribute('rx', '6');
       box.setAttribute('ry', '6');
       box.setAttribute('fill', color);
