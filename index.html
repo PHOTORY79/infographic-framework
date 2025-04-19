@@ -122,10 +122,21 @@
     // ─── 공통 색상 팔레트 함수 (새로 추가) ───
 function getColorScheme(key) {
   const palettes = {
-    corporate: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368'],
-    vibrant:   ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#F5FF33'],
-    monochromatic: ['#333333', '#555555', '#777777', '#999999', '#BBBBBB'],
-    brandcolors:   ['#1877F2', '#E4405F', '#0A66C2', '#E4405F', '#FF0000']
+    corporate:      ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368'],
+    monochromatic:  ['#333333', '#555555', '#777777', '#999999', '#BBBBBB'],
+    analogous:      ['#FFB366', '#FFE066', '#66FFB3', '#66B3FF', '#B366FF'],
+    complementary:  ['#4285F4', '#FBBC05', '#34A853', '#EA4335', '#5F6368'],
+    triadic:        ['#4285F4', '#FB4226', '#42FB97', '#FB42EC', '#FBF142'],
+    pastel:         ['#FFB6C1', '#AFEEEE', '#FFDAB9', '#D8BFD8', '#FFFACD'],
+    vibrant:        ['#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#F5FF33'],
+    grayscale:      ['#FFFFFF', '#CCCCCC', '#999999', '#666666', '#333333'],
+    cooltones:      ['#3498DB', '#1ABC9C', '#2ECC71', '#9B59B6', '#34495E'],
+    warmtones:      ['#E74C3C', '#F39C12', '#D35400', '#F1C40F', '#E67E22'],
+    natureinspired: ['#228B22', '#2E8B57', '#6B8E23', '#556B2F', '#8FBC8F'],
+    datadriven:     ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD'],
+    brandcolors:    ['#1877F2', '#E4405F', '#1DA1F2', '#0A66C2', '#FF0000'],
+    highcontrast:   ['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF'],
+    accessible:     ['#005A9C', '#107C10', '#FFB900', '#A80000', '#5C5C5C']
     // 필요하면 계속 추가
   };
   key = (key || 'corporate').toLowerCase().replace(/\s+/g, '');
