@@ -176,14 +176,48 @@ window.addEventListener('load', function() {
   
   // CSV 파싱 함수 직접 구현
   function parseCSVData(csvText) {
-    const result = {
-      data: {}
-    };
-    
-    if (!csvText) {
-      console.error('CSV 데이터가 비어 있습니다.');
-      return result;
+  const result = { data: {} };
+  const lines = csvText.split(/\r?\n/);
+  let buffer = '',
+      currentId = null;
+
+  for (let rawLine of lines) {
+    // 새 속성 시작?
+    if (currentId === null) {
+      const commaIdx = rawLine.indexOf(',');
+      if (commaIdx === -1) continue;
+      currentId = rawLine.slice(0, commaIdx).trim();
+      buffer    = rawLine.slice(commaIdx + 1).trim();
+    } else {
+      // 멀티라인 JSON 배열 계속 누적
+      buffer += '\n' + rawLine.trim();
     }
+
+    // 배열 끝인지 체크
+    if (buffer.startsWith('[') && !buffer.trim().endsWith(']')) {
+      continue;
+    }
+
+    // 값 파싱
+    let value;
+    if (buffer.startsWith('[')) {
+      try { value = JSON.parse(buffer); }
+      catch { value = buffer; }
+    } else if (buffer.startsWith('"') && buffer.endsWith('"')) {
+      value = buffer.slice(1, -1);
+    } else {
+      value = buffer;
+    }
+
+    result.data[currentId] = value;
+    currentId = null;
+    buffer    = '';
+  }
+
+  console.log('파싱된 CSV 데이터:', result.data);
+  return result;
+}
+
     
       // ─────────── 멀티라인 JSON 배열 지원 파싱 로직 ───────────
   const rawLines = csvText.split(/\r?\n/);
