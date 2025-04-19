@@ -1007,16 +1007,23 @@ function renderSimpleProcessDiagram(container, data) {
   //   const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8334A2'];
   //  return colors[index % colors.length];
   // }
-  
-  if (isHorizontal) {
-    // 수평 프로세스 다이어그램
-    const boxWidth       = 120;
-    const arrowLength    = 40;
-    const centerY        = 100;        // 원래 startY 역할
-    const startY         = centerY;    // ← 추가!
-    const lineHeight     = 16;         // 한 줄 텍스트 높이
-    const verticalPad    = 16;         // 위아래 여백 합
+ // ▶︎ 설명 줄 수 & 박스 높이 계산 (if문 바깥에서 한 번만 선언)
+    const lineHeight  = 16;                                 
+    const verticalPad = 20;                                
+    const descCounts  = descriptions.map(d => d.split('\n').length);
+    const boxHeight   = Math.max(...descCounts) * lineHeight + verticalPad;
+    const centerY     = 100;
+    const boxY        = centerY - boxHeight / 2;
     
+    if (isHorizontal) {
+      // 수평 프로세스 다이어그램
+      const svgHeight     = boxHeight + 100;
+      svg.setAttribute('height', svgHeight);
+    
+      const boxWidth      = 120;
+      const arrowLength   = 40;
+      const startY        = centerY;  // 필요 시 유지
+   
     for (let i = 0; i < steps.length; i++) {
       const descCount = descriptions[i] ? descriptions[i].split('\n').length : 1;
       const boxHeight = descCount * lineHeight + verticalPad;
