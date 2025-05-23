@@ -2195,17 +2195,116 @@
 
 
         // 샷 음악 탭 생성
+        // 샷 음악 탭 생성 (프로젝트 전체 음악 정보 + 샷별 메모)
         function createShotMusicTab(shot) {
-            console.log('🎵 createShotMusicTab 시작');
+            console.log('🎵 createShotMusicTab 시작 (프로젝트 음악 정보 + 샷별 메모)');
             try {
-                const musicPrompts = shot.music_prompts || {}; const currentMusic = shot.content?.music || ''; const audioUrls = shot.content?.audio_urls || {};
-                const createOstSection = (type, title, emoji) => {
-                    const ost = musicPrompts[type]; const url = audioUrls[type] || '';
-                    if (!ost) return `<div class="music-ost-section"><h4>${emoji} ${title}</h4><div style="text-align:center;padding:20px;color:#999;">${title} 프롬프트 없음</div></div>`;
-                    return `<div class="music-ost-section"><h4>${emoji} ${title}</h4><div class="audio-player-area" style="margin-bottom:15px;">${url?`<audio controls style="width:100%;" src="${url}"></audio>`:`<div style="color:#999;">${title} URL 입력</div>`}</div><div class="form-group"><label class="form-label">${title} URL</label><input type="text" class="form-input" value="${url}" placeholder="https://example.com/${type}.mp3" onchange="updateAudioUrl('${shot.id}','${type}',this.value)"></div><div class="ost-prompt-grid"><div class="ost-prompt-item"><div class="prompt-title">스타일 프롬프트</div><div class="prompt-text">${ost.style_prompt||'없음'}</div><button class="copy-btn" onclick="copyToClipboard('${(ost.style_prompt||'').replace(/'/g,"&#39;").replace(/\n/g,"\\n")}').then(ok=>ok&&showMessage('${title} 스타일 프롬프트 복사됨.','success'))">복사</button></div><div class="ost-prompt-item"><div class="prompt-title">가사 & 구조 프롬프트</div><div class="prompt-text">${ost.lyrics_structure_prompt||'없음'}</div><button class="copy-btn" onclick="copyToClipboard('${(ost.lyrics_structure_prompt||'').replace(/'/g,"&#39;").replace(/\n/g,"\\n")}').then(ok=>ok&&showMessage('${title} 가사/구조 프롬프트 복사됨.','success'))">복사</button></div></div></div>`;
+                // 프로젝트 레벨의 음악 정보 가져오기
+                const projectMusicPrompts = currentData.film_metadata?.project_music_prompts || {};
+                const projectMusicUrls = currentData.film_metadata?.project_music_urls || {};
+
+                // 샷 레벨의 음악 메모 가져오기
+                const shotMusicMemo = shot.music_memo || '';
+
+                const createProjectOstSection = (ostType, title, emoji) => {
+                    const ostPromptData = projectMusicPrompts[ostType];
+                    const ostUrl = projectMusicUrls[ostType] || '';
+
+                    if (!ostPromptData) {
+                        return `<div class="music-ost-section"><h4>${emoji} ${title} (프로젝트)</h4><div style="text-align:center;padding:20px;color:#999;">${title} 프롬프트 정보가 없습니다. (film_metadata.project_music_prompts)</div></div>`;
+                    }
+
+                    const stylePrompt = ostPromptData.style_prompt || '스타일 프롬프트가 없습니다.';
+                    const lyricsPrompt = ostPromptData.lyrics_structure_prompt || '가사&구조 프롬프트가 없습니다.';
+                    const stylePromptForCopy = stylePrompt.replace(/'/g, "&#39;").replace(/\n/g, "\\n");
+                    const lyricsPromptForCopy = lyricsPrompt.replace(/'/g, "&#39;").replace(/\n/g, "\\n");
+
+                    return `
+                        <div class="music-ost-section">
+                            <h4>${emoji} ${title} (프로젝트 전체)</h4>
+                            <div class="audio-player-area" style="margin-bottom:15px;">
+                                ${ostUrl ? `<audio controls style="width: 100%;" src="${ostUrl}"></audio>` : `<div style="color: #999;">${title} URL 입력 (프로젝트 레벨)</div>`}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">${title} URL (프로젝트 전체)</label>
+                                <input type="text" class="form-input" value="${ostUrl}" 
+                                       placeholder="https://example.com/${ostType}.mp3" 
+                                       onchange="updateProjectMusicUrl('${ostType}', this.value)">
+                            </div>
+                            <div class="ost-prompt-grid">
+                                <div class="ost-prompt-item">
+                                    <div class="prompt-title">스타일 프롬프트</div>
+                                    <div class="prompt-text">${stylePrompt}</div>
+                                    <button class="copy-btn btn-small" onclick="copyToClipboard('${stylePromptForCopy}').then(ok => ok && showMessage('${title} 스타일 프롬프트 복사됨.', 'success'))">복사</button>
+                                </div>
+                                <div class="ost-prompt-item">
+                                    <div class="prompt-title">가사 & 구조 프롬프트</div>
+                                    <div class="prompt-text">${lyricsPrompt}</div>
+                                    <button class="copy-btn btn-small" onclick="copyToClipboard('${lyricsPromptForCopy}').then(ok => ok && showMessage('${title} 가사/구조 프롬프트 복사됨.', 'success'))">복사</button>
+                                </div>
+                            </div>
+                        </div>`;
                 };
-                return createOstSection('main_ost','메인 OST','🎼') + createOstSection('sub_ost_1','서브 OST 1','🎵') + createOstSection('sub_ost_2','서브 OST 2','🎶') + `<div class="info-section"><h3>🎵 현재 사용 음악 정보</h3><div class="form-group"><label class="form-label">현재 샷 배경음악 설명</label><input type="text" class="form-input" value="${currentMusic}" placeholder="예: 긴장감 있는 메인 OST 사용" onchange="updateCurrentMusicDescription('${shot.id}',this.value)"></div><table class="info-table"><tr><th>음악 프롬프트 수</th><td>${Object.keys(musicPrompts).length}개</td></tr></table><small style="color:#777;font-size:0.85em;">샷에 어떤 음악이 사용되는지에 대한 설명입니다.</small></div>`;
-            } catch (e) { console.error('❌ createShotMusicTab 오류:', e); return `<div class="info-section"><h3>음악 탭 로드 오류</h3><p>${e.message}</p></div>`; }
+
+                const mainOstHtml = createProjectOstSection('main_ost', '메인 OST', '🎼');
+                const subOst1Html = createProjectOstSection('sub_ost_1', '서브 OST 1', '🎵');
+                const subOst2Html = createProjectOstSection('sub_ost_2', '서브 OST 2', '🎶');
+                
+                const shotMusicMemoHtml = `
+                    <div class="info-section">
+                        <h3>📝 이 샷의 음악 관련 메모</h3>
+                         <div class="form-group">
+                            <label class="form-label">샷 음악 적용 노트 (예: 이 샷부터 메인 테마 사용):</label>
+                            <textarea class="form-textarea" 
+                                      style="min-height: 100px;"
+                                      placeholder="이 샷에 적용될 음악에 대한 구체적인 지시사항이나 아이디어를 입력하세요..."
+                                      onchange="updateShotMusicMemo('${shot.id}', this.value)">${shotMusicMemo}</textarea>
+                            <small style="color:#777; font-size:0.85em;">이 메모는 현재 선택된 샷(${shot.id})에만 해당됩니다.</small>
+                        </div>
+                    </div>`;
+
+                return `${mainOstHtml}${subOst1Html}${subOst2Html}${shotMusicMemoHtml}`;
+            } catch (error) {
+                console.error('❌ createShotMusicTab 오류:', error);
+                return `<div class="info-section"><h3>음악 탭 로드 오류</h3><p>오류 메시지: ${error.message}</p></div>`;
+            }
+        }
+
+        // 프로젝트 레벨 음악 URL 업데이트 함수
+        function updateProjectMusicUrl(ostType, newUrl) {
+            try {
+                if (!currentData.film_metadata) currentData.film_metadata = {};
+                if (!currentData.film_metadata.project_music_urls) currentData.film_metadata.project_music_urls = {};
+                
+                currentData.film_metadata.project_music_urls[ostType] = newUrl;
+                saveDataToLocalStorage();
+                
+                // 현재 탭이 음악 탭이라면 UI 즉시 갱신 (플레이어 부분)
+                const activeTabId = document.querySelector('.tab-button.active')?.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (activeTabId === 'music' && selectedType === 'shot' && selectedId) {
+                    showShotContent(selectedId); // 현재 샷 콘텐츠를 다시 그려서 음악 탭 업데이트
+                    setTimeout(() => switchTab('music', selectedId), 0); // 음악 탭 활성화 유지
+                }
+                showMessage(`프로젝트 ${ostType} URL이 업데이트되었습니다.`, 'success');
+            } catch (error) {
+                console.error("프로젝트 음악 URL 업데이트 오류:", error);
+                showMessage('프로젝트 음악 URL 업데이트 중 오류 발생', 'error');
+            }
+        }
+
+        // 샷별 음악 메모 업데이트 함수
+        function updateShotMusicMemo(shotId, memo) {
+            try {
+                const shot = currentData.breakdown_data.shots.find(s => s.id === shotId);
+                if (!shot) return showMessage('샷 데이터를 찾을 수 없습니다.', 'error');
+                
+                shot.music_memo = memo;
+                saveDataToLocalStorage();
+                showMessage(`샷 ${shotId}의 음악 메모가 업데이트되었습니다.`, 'success');
+            } catch (error) {
+                console.error("샷 음악 메모 업데이트 오류:", error);
+                showMessage('샷 음악 메모 업데이트 중 오류 발생', 'error');
+            }
         }
         
         // 메모 관리 함수들
