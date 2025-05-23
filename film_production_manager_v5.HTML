@@ -1211,178 +1211,81 @@
             
             return {
                 "film_id": "FILM_TEST001",
-                "current_stage_name": "scenario_breakdown", // 스테이지 7 스키마에 따라 video_prompt_generation 등으로 변경될 수 있음
-                "timestamp": new Date().toISOString(),
-                "schema_version": "1.1.0", // 현재 HTML 구조에 맞는 버전 (예시)
-                "transfer_ready_for_next_stage": false, // 스테이지 5 스키마 필드
+                // ... (기존 film_id, current_stage_name 등은 그대로) ...
                 "film_metadata": {
                     "title_working": "테스트 영화",
-                    "confirmed_genre": "SF"
+                    "confirmed_genre": "SF",
+                    // ▼▼▼ 프로젝트 전체 음악 정보 추가 ▼▼▼
+                    "project_music_prompts": {
+                        "main_ost": {
+                            "style_prompt": "웅장하고 미래적인 메인 테마 (프로젝트 전체)",
+                            "lyrics_structure_prompt": "A-B-A 구조의 기악곡, 반복적인 모티프 사용"
+                        },
+                        "sub_ost_1": {
+                            "style_prompt": "긴장감 넘치는 추격씬용 음악 스타일 (프로젝트 전체)",
+                            "lyrics_structure_prompt": "빠른 템포, 전자음악과 오케스트라 혼합"
+                        },
+                        "sub_ost_2": {
+                            "style_prompt": "감성적인 장면을 위한 서정적인 피아노 선율 (프로젝트 전체)",
+                            "lyrics_structure_prompt": "느린 템포, 미니멀한 구성"
+                        }
+                    },
+                    "project_music_urls": { // 프로젝트 대표 음악 URL (예시)
+                        "main_ost": "https://example.com/project_main_theme.mp3",
+                        "sub_ost_1": "https://example.com/project_tension_theme.mp3",
+                        "sub_ost_2": "" // 비워둘 수도 있음
+                    }
+                    // ▲▲▲ 프로젝트 전체 음악 정보 추가 끝 ▲▲▲
                 },
                 "breakdown_data": {
-                    "source_data_references": { // 스테이지 5 스키마 필드
-                        "narrative_data_id": "NARR_001",
-                        "concept_art_data_id": "CA_001"
-                    },
-                    "sequences": [
-                        {
-                            "id": "SEQ1",
-                            "title": "해커의 일상",
-                            "function": "exposition", // 스테이지 5 enum 값 사용
-                            "description": "주인공 레이븐의 일상을 보여주는 시퀀스",
-                            "scenes": ["S01"], // 스테이지 5 필드
-                            "duration_estimate": "05:00" // 스테이지 5 형식
-                        }
-                    ],
-                    "scenes": [
-                        {
-                            "id": "S01",
-                            "sequence_id": "SEQ1",
-                            "title": "레이븐의 아파트에서의 해킹 작업",
-                            "description": "레이븐이 자신의 아파트에서 해킹 작업을 하는 장면",
-                            "visual_consistency_info": {
-                                "location_id": "location-1",
-                                "character_ids": ["character-1"],
-                                "prop_ids": ["prop-1", "prop-2"]
-                            },
-                            "additional_visual_info": { // 스테이지 5 필드
-                                "location_additions": {"weather": "rainy", "time_of_day": "night"},
-                                "character_additions": {"character-1": {"emotional_state": "focused"}}
-                            },
-                            "shot_ids": ["S01.01", "S01.02"] // 스테이지 5 필드
-                        }
-                    ],
+                    // ... (기존 source_data_references, sequences, scenes 등은 그대로) ...
                     "shots": [
                         {
                             "id": "S01.01",
-                            "scene_id": "S01",
-                            "title": "레이븐의 아파트 확립 샷",
-                            "description": "비밀스러운 분위기의 어두운 아파트 내부 전경",
-                            "shot_type": "establishing_shot",
-                            "visual_consistency_info": {
-                                "location_id": "location-1",
-                                "character_ids": ["character-1"],
-                                "prop_ids": ["prop-1"]
-                            },
-                            "additional_visual_info": {}, // 필요시 추가
+                            // ... (기존 S01.01의 다른 필드들은 최대한 유지) ...
                             "content": {
                                 "action": "레이븐이 컴퓨터 앞에 앉아 집중하며 키보드를 타이핑",
-                                "dialogue": { // 스테이지 7의 dialogue 구조 참고
-                                    "character-1": {
-                                        "text": "이번 일은 좀 다르군... 조심스럽게 접근해야겠어.",
-                                        "emotion": "집중",
-                                        "voice_style": "차분하고 신중한"
-                                    }
+                                "dialogue": {
+                                    "character-1": { "text": "이번 일은 좀 다르군...", "emotion": "집중", "voice_style": "차분하고 신중한" }
                                 },
                                 "narration": "그녀는 어둠 속에서 빛을 찾고 있었다.",
                                 "sound_effects": "키보드 타이핑 소리, 컴퓨터 팬 소리, 빗소리",
-                                "music": "긴장감 있는 신디사이저 배경음악",
-                                "audio_urls": { // 오디오 URL 예시
+                                "music": "", // 이 필드는 이제 shot.music_memo로 대체될 수 있으나, 호환성을 위해 남겨두거나 비워둘 수 있음
+                                "audio_urls": {
                                     "dialogue": "https://example.com/audio/S01.01_dialogue.mp3",
                                     "narration": "https://example.com/audio/S01.01_narration.mp3",
-                                    "sound_effects": "https://example.com/audio/S01.01_sfx.mp3",
-                                    "main_ost": "https://example.com/audio/S01.01_main_ost.mp3",
-                                    "sub_ost_1": "https://example.com/audio/S01.01_sub_ost1.mp3"
+                                    "sound_effects": "https://example.com/audio/S01.01_sfx.mp3"
+                                    // 샷별 OST URL은 여기서 제거하고 프로젝트 레벨에서 관리
                                 }
                             },
-                            "camera_movement": { // 스테이지 5 필드
-                                "movement_type": "slow_pan", "speed": "slow", "direction": "left_to_right"
-                            },
-                            "camera_framing": { // 스테이지 5 필드
-                                "framing": "wide_shot", "angle": "eye_level", "view_direction": "front", "composition": "rule_of_thirds"
-                            },
-                            "camera_effects": {}, // 필요시 추가
-                            "image_prompts": { 
-                                "midjourney": { "main_prompt": "MJ prompt for S01.01...", "parameters": "--ar 16:9" },
-                                "ideogram": { "main_prompt": "Ideogram prompt for S01.01...", "parameters": "" },
-                                "leonardo": { "main_prompt": "Leonardo prompt for S01.01...", "parameters": "" },
-                                "imagefx": { "main_prompt": "ImageFX prompt for S01.01...", "parameters": "" }
-                            },
-                            "image_design": { 
-                                "aspect_ratio": "16:9",
-                                "ai_generated_images": {
-                                    "midjourney": [
-                                        { "url": "https://cdn.midjourney.com/0c8b7a78-d5e8-4c9f-ba2b-5e7e0f2d0e7d/0_0.png", "description": "미드저니 생성 이미지 1 - 전체적인 분위기" },
-                                        { "url": "", "description": "" },
-                                        { "url": "", "description": "" }
-                                    ],
-                                    "ideogram": [ { "url": "https://ideogram.ai/assets/img/landing/examples/image_0.jpg", "description": "아이디오그램 생성 이미지 - 다른 각도" }, null, null], // null 또는 빈 객체로 슬롯 표현 가능
-                                    "leonardo": [null,null,null],
-                                    "imagefx": [null,null,null]
-                                }
-                                // 스테이지 5의 images[]는 여기서는 사용하지 않음. ai_generated_images로 대체.
-                            },
-                             "reference_images": [ 
-                                { "id": "ref_img_1_s0101", "type": "style", "description": "블레이드 러너 영화의 네온사인 스타일 참조", "url": "https://images.hdqwalls.com/wallpapers/blade-runner-2049-movie-screencaps-8k-uh.jpg", "influence_weight": 0.7 },
-                                { "id": "ref_img_2_s0101", "type": "composition", "description": "캐릭터가 화면 중앙에서 약간 벗어난 구도", "url": "https://i.pinimg.com/originals/78/25/80/782580a3f3544506510890136d3869c9.jpg", "influence_weight": 0.5 },
-                                { "id": "ref_img_3_s0101", "type": "appearance", "description": "해커 캐릭터 의상 참조", "url": "", "influence_weight": 0.6 }
-                            ],
-                            "video_prompts": { // 스테이지 7 필드
-                                "luma": { "main_prompt": "Luma prompt for S01.01...", "settings": { "duration": "5s", "style": "cinematic" } },
-                                "kling": { "main_prompt": "Kling prompt for S01.01...", "settings": { "aspect_ratio": "16:9"} },
-                                "veo2": { "main_prompt": "Veo2 prompt for S01.01...", "settings": { "resolution": "1080p" } },
-                                "runway": { "main_prompt": "Runway prompt for S01.01...", "settings": { "seed": 12345 } }
-                            },
-                            "video_urls": { // 스테이지 7 필드
-                                "luma": "https://storage.googleapis.com/luma-labs-tmp-public/captures/0a7b2c3d-1e4f-4a9b-8c7d-5f6e0a1b2c3d/videos/0/luma-capture-0a7b2c3d-1e4f-4a9b-8c7d-5f6e0a1b2c3d_0.mp4",
-                                "kling": "", "veo2": "", "runway": ""
-                            },
-                            "final_video_selection": { // 스테이지 7 필드
-                                "selected_ai": "luma",
-                                "selected_url": "https://storage.googleapis.com/luma-labs-tmp-public/captures/0a7b2c3d-1e4f-4a9b-8c7d-5f6e0a1b2c3d/videos/0/luma-capture-0a7b2c3d-1e4f-4a9b-8c7d-5f6e0a1b2c3d_0.mp4",
-                                "confirmed": true
-                            },
-                             "video_design": { // HTML 내부 관리용 / 스테이지 7 호환용
-                                "ai_tool": "luma", 
-                                "video_url": "https://storage.googleapis.com/luma-labs-tmp-public/captures/0a7b2c3d-1e4f-4a9b-8c7d-5f6e0a1b2c3d/videos/0/luma-capture-0a7b2c3d-1e4f-4a9b-8c7d-5f6e0a1b2c3d_0.mp4", 
-                                "selected_ai": "luma"
-                            },
-                            "audio_prompts": {
+                            // ▼▼▼ 샷별 음악 메모 추가 ▼▼▼
+                            "music_memo": "이 샷의 오프닝 시퀀스에는 프로젝트 메인 테마를 사용한다. 긴장감을 서서히 고조시키는 편곡.",
+                            // ▲▲▲ 샷별 음악 메모 추가 끝 ▲▲▲
+                            "audio_prompts": { // 기존 audio_prompts 내 music_prompts는 이제 사용하지 않음 (프로젝트 레벨로 이동)
                                 "dialogue": { "prompt": "S01.01 Dialogue: ...", "settings": {} },
                                 "narration": { "prompt": "S01.01 Narration: ...", "settings": {} },
                                 "sound_effects": { "prompt": "S01.01 SFX: ...", "settings": {} }
-                            },
-                            "music_prompts": {
-                                "main_ost": { "style_prompt": "S01.01 Main OST Style: ...", "lyrics_structure_prompt": "..." },
-                                "sub_ost_1": { "style_prompt": "S01.01 Sub OST1 Style: ...", "lyrics_structure_prompt": "..." }
-                            },
-                            "other_info": { // 스테이지 5 필드
-                                "estimated_duration": 10, "memo": "첫 번째 샷, 분위기 중요"
                             }
+                            // music_prompts 필드는 shot 객체에서 제거하거나 비워둠 (프로젝트 레벨로 이동했으므로)
                         },
-                        // S01.02 (두 번째 샷) 데이터도 유사하게 구성
                         {
                             "id": "S01.02",
-                            "scene_id": "S01",
-                            "title": "레이븐의 집중된 얼굴",
-                            "description": "모니터 불빛에 비친 레이븐의 집중된 표정",
-                            "shot_type": "close_up",
-                            "visual_consistency_info": {"location_id":"location-1", "character_ids":["character-1"], "prop_ids":["prop-2"]},
-                            "content": {"action": "레이븐의 표정 변화를 클로즈업으로 포착", "narration": "그녀의 눈에는 결의가 담겨 있었다."},
-                            "camera_framing": {"framing":"close_up", "angle":"normal", "view_direction":"front", "composition":"rule_of_thirds"},
-                            "image_prompts": {
-                                "midjourney": { "main_prompt": "MJ prompt for S01.02...", "parameters": "--ar 2:3" }
+                            // ... (기존 S01.02의 다른 필드들은 최대한 유지) ...
+                            "content": {
+                                "action": "레이븐의 표정 변화를 클로즈업으로 포착",
+                                "narration": "그녀의 눈에는 결의가 담겨 있었다.",
+                                "music": "", // 이 필드는 이제 shot.music_memo로 대체될 수 있음
+                                "audio_urls": {}
                             },
-                            "image_design": {
-                                "aspect_ratio": "2:3",
-                                "ai_generated_images": { "midjourney": [null,null,null], "ideogram": [null,null,null], "leonardo": [null,null,null], "imagefx": [null,null,null] }
-                            },
-                            "reference_images": [],
-                            "video_prompts": {
-                                "luma": { "main_prompt": "Luma prompt for S01.02...", "settings": { "duration": "3s" } }
-                            },
-                            "video_urls": {},
-                            "final_video_selection": {},
-                            "video_design": {"selected_ai": null, "video_url":""},
-                            "audio_prompts": {},
-                            "music_prompts": {},
-                            "other_info": {"estimated_duration": 5}
+                            // ▼▼▼ 샷별 음악 메모 추가 ▼▼▼
+                            "music_memo": "이 샷은 감정씬이므로 프로젝트 서브 OST 2 (서정적 피아노)를 사용. 대사 없이 음악과 표정으로 전달.",
+                            // ▲▲▲ 샷별 음악 메모 추가 끝 ▲▲▲
+                            "audio_prompts": {}
                         }
                     ]
                 }
             };
         }
-
         // JSON 데이터 로드
         async function loadData() {
             console.log('🔄 데이터 로드 시작...');
