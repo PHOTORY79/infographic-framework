@@ -2110,21 +2110,186 @@
         }
 
         // 샷 오디오 탭 생성
+        // 샷 오디오 탭 생성 (대화/나레이션 상세 및 TTS용 분리)
         function createShotAudioTab(shot) {
-            console.log('🔊 createShotAudioTab 시작');
+            console.log('🔊 createShotAudioTab 시작 (TTS용 분리)');
             try {
-                const audioUrls = shot.content?.audio_urls || {}; const audioPrompts = shot.audio_prompts || {};
-                const dialogue = shot.content?.dialogue || {}; const soundEffects = shot.content?.sound_effects || ''; const narration = shot.content?.narration || ''; 
-                const createAudioHTML = (type, title, emoji, content, promptData, url) => {
-                    let contentHtml = content ? `<div class="form-group"><label class="form-label">${title} 내용</label><div class="audio-content-display">${content}</div><button class="copy-btn" onclick="copyToClipboard('${content.replace(/'/g, "&#39;").replace(/\n/g, "\\n")}').then(ok => ok && showMessage('${title} 내용 복사됨.', 'success'))">${title} 내용 복사</button></div>` : '';
-                    let promptHtml = promptData ? `<div class="prompt-container"><div class="prompt-header"><span class="prompt-title">${title} 생성 프롬프트</span><button class="copy-btn" onclick="copyToClipboard('${(promptData.prompt||'').replace(/'/g, "&#39;").replace(/\n/g, "\\n")}').then(ok => ok && showMessage('${title} 프롬프트 복사됨.', 'success'))">복사</button></div><div class="prompt-text">${promptData.prompt||'프롬프트 없음'}</div>${promptData.settings ? `<div style="margin-top:8px;font-size:0.85rem;color:#666;">설정: ${JSON.stringify(promptData.settings)}</div>` : ''}</div>` : '';
-                    return `<div class="audio-section"><h4>${emoji} ${title} 오디오</h4><div class="audio-player-area">${url ? `<audio controls style="width:100%;" src="${url}"></audio>` : `<div style="color:#999;">${title} 오디오 URL 입력</div>`}</div><div class="form-group"><label class="form-label">${title} 오디오 URL</label><input type="text" class="form-input" value="${url||''}" placeholder="https://example.com/${type}.mp3" onchange="updateAudioUrl('${shot.id}', '${type}', this.value)"></div>${contentHtml}${promptHtml}</div>`;
-                };
-                return createAudioHTML('dialogue', '대화', '🎤', Object.keys(dialogue).map(k=>`${k}: ${typeof dialogue[k]==='object'?dialogue[k].text:dialogue[k]}`).join('\n'), audioPrompts.dialogue, audioUrls.dialogue) +
-                       createAudioHTML('narration', '나레이션', ' narr️', narration, audioPrompts.narration, audioUrls.narration) +
-                       createAudioHTML('sound_effects', '음향 효과', '🔊', soundEffects, audioPrompts.sound_effects, audioUrls.sound_effects);
-            } catch (e) { console.error('❌ createShotAudioTab 오류:', e); return `<div class="info-section"><h3>오디오 탭 로드 오류</h3><p>${e.message}</p></div>`; }
+                const audioUrls = shot.content?.audio_urls || {};
+                const dialogue = shot.content?.dialogue || {};
+                const narration = shot.content?.narration || '';
+                // audio_prompts는 이제 TTS용 순수 텍스트를 content에서 가져오므로, 여기서는 참고용으로만 확인
+                const audioPrompts = shot.audio_prompts || {};
+
+                // --- 대화 오디오 섹션 ---
+                let dialogueContentHtml = '';
+                if (Object.keys(dialogue).length > 0) {
+                    dialogueContentHtml = Object.entries(dialogue).map(([charId, dia]) => {
+                        return `<strong>${charId}:</strong> ${dia.text || ''} <em>(감정: ${dia.emotion || '-'}, 스타일: ${dia.voice_style || '-'})</em>`;
+                    }).join('<br>');
+                } else {
+                    dialogueContentHtml = '대화 내용이 없습니다.';
+                }
+
+                const fullDialogueForCopy = Object.entries(dialogue).map(([charId, dia]) => {
+                    return `${charId}: ${dia.text || ''} (감정: ${dia.emotion || '-'}, 스타일: ${dia.voice_style || '-'})`;
+                }).join('\\n').replace(/'/g, "&#39;");
+
+                let characterOptionsHtml = Object.keys(dialogue).map(charId => `<option value="${charId}">${charId}</option>`).join('');
+                let initialTtsDialogueText = '';
+                if (Object.keys(dialogue).length > 0) {
+                    const firstCharId = Object.keys(dialogue)[0];
+                    initialTtsDialogueText = dialogue[firstCharId]?.text || '';
+                }
+
+                const dialogueHtml = `
+                    <div class="audio-section">
+                        <h4>🎤 대화 오디오</h4>
+                        <div class="audio-player-area">
+                            ${audioUrls.dialogue ? `<audio controls style="width: 100%;" src="${audioUrls.dialogue}"></audio>` : `<div style="color: #999;">대화 오디오 URL 입력</div>`}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">대화 오디오 URL</label>
+                            <input type="text" class="form-input" value="${audioUrls.dialogue || ''}" placeholder="https://example.com/dialogue.mp3" onchange="updateAudioUrl('${shot.id}', 'dialogue', this.value)">
+                        </div>
+
+                        <div class="info-section" style="padding:15px; background-color:#fcfcfc;">
+                            <h5>대화 내용 (검토용)</h5>
+                            <div class="audio-content-display" style="min-height:80px; white-space:normal;">${dialogueContentHtml}</div>
+                            <button class="copy-btn btn-small" style="margin-top:5px;" onclick="copyToClipboard('${fullDialogueForCopy}').then(ok => ok && showMessage('전체 대화 내용 복사됨.', 'success'))">전체 대화 내용 복사</button>
+                        </div>
+
+                        <div class="info-section" style="padding:15px; background-color:#fcfcfc; margin-top:15px;">
+                            <h5>TTS용 캐릭터 대사 (더빙용)</h5>
+                            <div class="form-group">
+                                <label for="tts-char-select-${shot.id}" class="form-label">캐릭터 선택:</label>
+                                <select id="tts-char-select-${shot.id}" class="form-select" onchange="updateTtsDialogueDisplay('${shot.id}')" ${Object.keys(dialogue).length === 0 ? 'disabled' : ''}>
+                                    ${characterOptionsHtml || '<option value="">선택할 캐릭터 없음</option>'}
+                                </select>
+                            </div>
+                            <div class="audio-content-display" id="tts-dialogue-text-${shot.id}" style="min-height:60px;">${initialTtsDialogueText.replace(/\n/g, "<br>")}</div>
+                            <button class="copy-btn btn-small" style="margin-top:5px;" onclick="copyTtsDialogue('${shot.id}')">선택 캐릭터 대사 복사</button>
+                            ${audioPrompts.dialogue?.prompt ? `<div class="prompt-text" style="margin-top:10px; font-size:0.8em; background-color:#eee; padding:5px;">참고용 기존 프롬프트: ${audioPrompts.dialogue.prompt}</div>` : ''}
+                            ${audioPrompts.dialogue?.settings ? `<div style="margin-top:5px; font-size:0.8em; color:#555;">참고용 기존 설정: ${JSON.stringify(audioPrompts.dialogue.settings)}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // --- 나레이션 오디오 섹션 ---
+                const narrationForCopy = (narration || '').replace(/'/g, "&#39;").replace(/\n/g, "\\n");
+                // TTS용 나레이션 텍스트는 shot.content.narration을 우선 사용. 없다면 audio_prompts.narration.prompt 사용.
+                const ttsNarrationSourceText = narration || audioPrompts.narration?.prompt || '나레이션 내용 또는 프롬프트가 없습니다.';
+                const ttsNarrationForCopy = (ttsNarrationSourceText).replace(/'/g, "&#39;").replace(/\n/g, "\\n");
+
+
+                const narrationHtml = `
+                    <div class="audio-section">
+                        <h4> narr️ 나레이션 오디오</h4>
+                        <div class="audio-player-area">
+                            ${audioUrls.narration ? `<audio controls style="width: 100%;" src="${audioUrls.narration}"></audio>` : `<div style="color: #999;">나레이션 오디오 URL 입력</div>`}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">나레이션 오디오 URL</label>
+                            <input type="text" class="form-input" value="${audioUrls.narration || ''}" placeholder="https://example.com/narration.mp3" onchange="updateAudioUrl('${shot.id}', 'narration', this.value)">
+                        </div>
+
+                        <div class="info-section" style="padding:15px; background-color:#fcfcfc;">
+                            <h5>나레이션 내용 (검토용)</h5>
+                            <div class="audio-content-display" style="min-height:60px;">${narration || '나레이션 내용이 없습니다.'}</div>
+                            <button class="copy-btn btn-small" style="margin-top:5px;" onclick="copyToClipboard('${narrationForCopy}').then(ok => ok && showMessage('나레이션 내용 복사됨.', 'success'))">나레이션 내용 복사</button>
+                        </div>
+
+                        <div class="info-section" style="padding:15px; background-color:#fcfcfc; margin-top:15px;">
+                            <h5>TTS용 나레이션 대사 (더빙용)</h5>
+                            <div class="audio-content-display" id="tts-narration-text-${shot.id}" style="min-height:60px;">${ttsNarrationSourceText.replace(/\n/g, "<br>")}</div>
+                            <button class="copy-btn btn-small" style="margin-top:5px;" onclick="copyToClipboard('${ttsNarrationForCopy}').then(ok => ok && showMessage('TTS용 나레이션 대사 복사됨.', 'success'))">TTS용 나레이션 대사 복사</button>
+                            ${audioPrompts.narration?.prompt && audioPrompts.narration.prompt !== ttsNarrationSourceText ? `<div class="prompt-text" style="margin-top:10px; font-size:0.8em; background-color:#eee; padding:5px;">참고용 기존 프롬프트: ${audioPrompts.narration.prompt}</div>` : ''}
+                            ${audioPrompts.narration?.settings ? `<div style="margin-top:5px; font-size:0.8em; color:#555;">참고용 기존 설정: ${JSON.stringify(audioPrompts.narration.settings)}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // --- 음향 효과 섹션 (기존과 유사하게 유지) ---
+                const soundEffects = shot.content?.sound_effects || '';
+                const soundEffectsForCopy = (soundEffects || '').replace(/'/g, "&#39;").replace(/\n/g, "\\n");
+                const sfxPromptText = audioPrompts.sound_effects?.prompt || '프롬프트가 없습니다.'; // 변수 이름 명확히
+                const sfxPromptForCopy = (sfxPromptText).replace(/'/g, "&#39;").replace(/\n/g, "\\n");
+
+                const soundEffectsHtml = `
+                    <div class="audio-section">
+                        <h4>🔊 음향 효과</h4>
+                        <div class="audio-player-area">
+                            ${audioUrls.sound_effects ? `<audio controls style="width: 100%;" src="${audioUrls.sound_effects}"></audio>` : `<div style="color: #999;">음향 효과 URL 입력</div>`}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">음향 효과 URL</label>
+                            <input type="text" class="form-input" value="${audioUrls.sound_effects || ''}" placeholder="https://example.com/sound.mp3" onchange="updateAudioUrl('${shot.id}', 'sound_effects', this.value)">
+                        </div>
+                        ${soundEffects ? `
+                        <div class="form-group">
+                            <label class="form-label">음향 효과 설명</label>
+                            <div class="audio-content-display">${soundEffects}</div>
+                            <button class="copy-btn btn-small" style="margin-top:5px;" onclick="copyToClipboard('${soundEffectsForCopy}').then(ok => ok && showMessage('음향 설명 복사됨.', 'success'))">음향 설명 복사</button>
+                        </div>` : ''}
+                        ${audioPrompts.sound_effects ? `
+                        <div class="prompt-container">
+                            <div class="prompt-header"><span class="prompt-title">음향 효과 생성 프롬프트</span>
+                                <button class="copy-btn" onclick="copyToClipboard('${sfxPromptForCopy}').then(ok => ok && showMessage('음향 프롬프트 복사됨.', 'success'))">복사</button>
+                            </div>
+                            <div class="prompt-text">${sfxPromptText}</div>
+                            ${audioPrompts.sound_effects.settings ? `<div style="margin-top: 8px; font-size: 0.85rem; color: #666;">설정: ${JSON.stringify(audioPrompts.sound_effects.settings)}</div>` : ''}
+                        </div>` : ''}
+                    </div>`;
+
+                console.log('✅ createShotAudioTab 완료');
+                return `${dialogueHtml}${narrationHtml}${soundEffectsHtml}`;
+            } catch (error) {
+                console.error('❌ createShotAudioTab 오류:', error);
+                return `<div class="info-section"><h3>오디오 탭 로드 오류</h3><p>오류: ${error.message}</p></div>`;
+            }
         }
+
+        // TTS용 대화 표시 업데이트 함수
+        function updateTtsDialogueDisplay(shotId) {
+            try {
+                const shot = currentData.breakdown_data.shots.find(s => s.id === shotId);
+                const selectElement = document.getElementById(`tts-char-select-${shotId}`);
+                const displayElement = document.getElementById(`tts-dialogue-text-${shotId}`);
+
+                if (shot && selectElement && displayElement && shot.content && shot.content.dialogue) {
+                    const selectedCharId = selectElement.value;
+                    const dialogueText = shot.content.dialogue[selectedCharId]?.text || '선택된 캐릭터의 대사가 없습니다.';
+                    displayElement.innerHTML = dialogueText.replace(/\n/g, "<br>"); // 표시할 때는 <br>로
+                }
+            } catch (error) {
+                console.error("TTS 대화 표시 업데이트 오류:", error);
+            }
+        }
+
+        // TTS용 선택 캐릭터 대사 복사 함수
+        function copyTtsDialogue(shotId) {
+            try {
+                // 표시된 내용(innerHTML)이 아닌, 원본 데이터에서 텍스트를 가져와 복사
+                const selectElement = document.getElementById(`tts-char-select-${shotId}`);
+                const shot = currentData.breakdown_data.shots.find(s => s.id === shotId);
+
+                if (selectElement && shot && shot.content && shot.content.dialogue) {
+                     const selectedCharId = selectElement.value;
+                     const dialogueText = shot.content.dialogue[selectedCharId]?.text || ''; // 원본 텍스트
+                     if (dialogueText.trim() === '') {
+                        showMessage('복사할 대사가 없습니다.', 'warning');
+                        return;
+                     }
+                     // 복사할 때는 \n을 그대로 유지 (클립보드 API가 OS에 맞게 처리)
+                     copyToClipboard(dialogueText).then(ok => ok && showMessage('선택된 캐릭터의 TTS용 대사가 복사되었습니다.', 'success'));
+                } else {
+                     showMessage('복사할 대사를 찾을 수 없습니다.', 'warning');
+                }
+            } catch (error) {
+                console.error("TTS 대화 복사 오류:", error);
+                showMessage('TTS 대사 복사 중 오류 발생', 'error');
+            }
+        }
+
 
         // 샷 음악 탭 생성
         function createShotMusicTab(shot) {
