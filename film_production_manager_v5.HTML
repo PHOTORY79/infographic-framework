@@ -1386,6 +1386,84 @@
                         updated = true;
                         showMessage('JSON 데이터를 전체 로드했습니다.', 'success');
                     } 
+                    // 스테이지 8 오디오 데이터 또는 기타 전체 구조에서 오디오만 병합할 경우
+                    else if (newData.current_stage_name === "audio_prompt_generation" || (newData.film_metadata && newData.breakdown_data && newData.breakdown_data.shots && newData.breakdown_data.shots[0] && newData.breakdown_data.shots[0].audio_prompts)) {
+                        console.log('🎧 스테이지 8 형식 또는 오디오 프롬프트 포함 데이터 병합을 시도합니다.');
+                        if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots) {
+                            showMessage('오디오 데이터를 병합하려면 먼저 기본 프로젝트 데이터(예: 스테이지5)를 로드해야 합니다.', 'warning');
+                            event.target.value = ''; // 파일 입력 초기화
+                            return; // 함수 종료 또는 다른 처리 필요
+                        }
+
+                        // 여기에 기존 currentData에 newData의 오디오 관련 정보만 병합하는 상세 로직이 들어갈 거야.
+                        // 지금은 구조만 잡아두고, 다음 단계에서 함께 채워나갈 거니까 걱정 마!
+                        console.log('🚧 오디오 데이터 상세 병합 로직은 다음 단계에서 구현 예정입니다.');
+
+                        // 예시: 영화 메타데이터 중 음악 관련 정보 병합 (만약 newData에 있다면)
+                        if (newData.film_metadata && newData.film_metadata.project_music_prompts) {
+                            if (!currentData.film_metadata) currentData.film_metadata = {};
+                            currentData.film_metadata.project_music_prompts = { ...currentData.film_metadata.project_music_prompts, ...newData.film_metadata.project_music_prompts };
+                            updated = true;
+                        }
+                        if (newData.film_metadata && newData.film_metadata.project_music_urls) {
+                            if (!currentData.film_metadata) currentData.film_metadata = {};
+                            currentData.film_metadata.project_music_urls = { ...currentData.film_metadata.project_music_urls, ...newData.film_metadata.project_music_urls };
+                            updated = true;
+                        }
+
+                        // 예시: 각 샷의 오디오 관련 정보 병합
+                        if (newData.breakdown_data && newData.breakdown_data.shots) {
+                            newData.breakdown_data.shots.forEach(newShotData => {
+                                const shotIdToFind = newShotData.id;
+                                const existingShot = currentData.breakdown_data.shots.find(shot => shot.id === shotIdToFind);
+
+                                if (existingShot) {
+                                    // audio_prompts 병합
+                                    if (newShotData.audio_prompts) {
+                                        if (!existingShot.audio_prompts) existingShot.audio_prompts = {};
+                                        for (const key in newShotData.audio_prompts) {
+                                            existingShot.audio_prompts[key] = { ...(existingShot.audio_prompts[key] || {}), ...newShotData.audio_prompts[key] };
+                                        }
+                                        updated = true;
+                                    }
+                                    // content 내 오디오 관련 필드 병합 (dialogue, narration, sound_effects, audio_urls)
+                                    if (newShotData.content) {
+                                        if (!existingShot.content) existingShot.content = {};
+                                        if (newShotData.content.dialogue) { // dialogue는 객체이므로 덮어쓰기 또는 세부 병합 필요
+                                            existingShot.content.dialogue = { ...existingShot.content.dialogue, ...newShotData.content.dialogue };
+                                            updated = true;
+                                        }
+                                        if (newShotData.content.narration !== undefined) {
+                                            existingShot.content.narration = newShotData.content.narration;
+                                            updated = true;
+                                        }
+                                        if (newShotData.content.sound_effects !== undefined) { // 음향 효과 설명
+                                            existingShot.content.sound_effects = newShotData.content.sound_effects;
+                                            updated = true;
+                                        }
+                                        if (newShotData.content.audio_urls) { // audio_urls 객체 병합
+                                            if (!existingShot.content.audio_urls) existingShot.content.audio_urls = {};
+                                            existingShot.content.audio_urls = { ...existingShot.content.audio_urls, ...newShotData.content.audio_urls };
+                                            updated = true;
+                                        }
+                                    }
+                                    // music_memo 병합
+                                    if (newShotData.music_memo !== undefined) {
+                                        existingShot.music_memo = newShotData.music_memo;
+                                        updated = true;
+                                    }
+                                }
+                            });
+                        }
+
+                        if (updated) {
+                             currentData.timestamp = new Date().toISOString(); // 변경사항이 있을 때만 타임스탬프 업데이트
+                            showMessage('오디오 관련 정보를 현재 데이터에 성공적으로 병합했습니다.', 'success');
+                        } else {
+                            showMessage('오디오 병합을 시도했으나, 변경된 내용이 없거나 대상 데이터를 찾지 못했습니다.', 'info');
+                        }
+                    }
+
                     // 가져온 데이터가 샷 중심의 업데이트 데이터일 경우 (shot_prompts 또는 breakdown_data.shots 존재 기준)
                     // (스테이지 6 스키마는 shot_prompts, 스테이지 7 스키마는 breakdown_data.shots 안에 video_prompts 등을 포함)
                     else if ((newData.shot_prompts || (newData.breakdown_data && newData.breakdown_data.shots)) && 
