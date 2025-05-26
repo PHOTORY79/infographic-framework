@@ -1374,62 +1374,58 @@
 
             console.log('선택된 파일:', file.name);
             const reader = new FileReader();
-            reader.onload = function(e) {
+           reader.onload = function(e) {
                 try {
                     const newData = JSON.parse(e.target.result);
                     let updated = false;
+                    let message = ''; // 메시지를 한번에 관리하기 위함
 
-                    // 현재 데이터가 없거나, 가져온 데이터가 전체 구조를 가지고 있다면 (sequences 필드 기준) 전체 덮어쓰기
-                    if (!currentData || (newData.breakdown_data && newData.breakdown_data.sequences)) {
-                        console.log('전체 데이터 구조로 덮어씁니다.');
-                        currentData = newData;
-                        updated = true;
-                        showMessage('JSON 데이터를 전체 로드했습니다.', 'success');
-                    } 
-                    // 스테이지 8 오디오 데이터 또는 기타 전체 구조에서 오디오만 병합할 경우
-                    else if (newData.current_stage_name === "audio_prompt_generation" || (newData.film_metadata && newData.breakdown_data && newData.breakdown_data.shots && newData.breakdown_data.shots[0] && newData.breakdown_data.shots[0].audio_prompts)) {
-                        console.log('🎧 스테이지 8 형식 또는 오디오 프롬프트 포함 데이터 병합을 시도합니다.');
-                        if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots) {
-                            showMessage('오디오 데이터를 병합하려면 먼저 기본 프로젝트 데이터(예: 스테이지5)를 로드해야 합니다.', 'warning');
-                            event.target.value = ''; // 파일 입력 초기화
-                            return; // 함수 종료 또는 다른 처리 필요
+                    // --- 조건문 순서 및 로직 수정 시작 ---
+
+                    // 1. 스테이지 8 (오디오 프롬프트 생성) 데이터 병합 우선 처리
+                    if (newData.current_stage_name === "audio_prompt_generation" && newData.film_metadata && newData.breakdown_data && newData.breakdown_data.shots) {
+                        console.log('🎧 스테이지 8 (오디오 프롬프트 생성) 데이터 병합을 시도합니다.');
+                        if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots || currentData.breakdown_data.shots.length === 0) {
+                            message = '오디오 데이터를 병합하려면 먼저 유효한 기본 프로젝트 데이터(샷 포함)를 로드해야 합니다.';
+                            showMessage(message, 'warning');
+                            event.target.value = '';
+                            return;
                         }
 
-                        // 여기에 기존 currentData에 newData의 오디오 관련 정보만 병합하는 상세 로직이 들어갈 거야.
-                        // 지금은 구조만 잡아두고, 다음 단계에서 함께 채워나갈 거니까 걱정 마!
-                        console.log('🚧 오디오 데이터 상세 병합 로직은 다음 단계에서 구현 예정입니다.');
-
-                        // 예시: 영화 메타데이터 중 음악 관련 정보 병합 (만약 newData에 있다면)
-                        if (newData.film_metadata && newData.film_metadata.project_music_prompts) {
+                        // film_metadata 병합 (음악 관련 및 기본 정보)
+                        if (newData.film_metadata) {
                             if (!currentData.film_metadata) currentData.film_metadata = {};
-                            currentData.film_metadata.project_music_prompts = { ...currentData.film_metadata.project_music_prompts, ...newData.film_metadata.project_music_prompts };
-                            updated = true;
-                        }
-                        if (newData.film_metadata && newData.film_metadata.project_music_urls) {
-                            if (!currentData.film_metadata) currentData.film_metadata = {};
-                            currentData.film_metadata.project_music_urls = { ...currentData.film_metadata.project_music_urls, ...newData.film_metadata.project_music_urls };
-                            updated = true;
+                            // 음악 프롬프트 병합 (newData 우선)
+                            if (newData.film_metadata.project_music_prompts) {
+                                currentData.film_metadata.project_music_prompts = { ...currentData.film_metadata.project_music_prompts, ...newData.film_metadata.project_music_prompts };
+                                updated = true;
+                            }
+                            // 음악 URL 병합 (newData 우선)
+                            if (newData.film_metadata.project_music_urls) {
+                                currentData.film_metadata.project_music_urls = { ...currentData.film_metadata.project_music_urls, ...newData.film_metadata.project_music_urls };
+                                updated = true;
+                            }
+                            // 영화 제목, 장르 등은 newData에 있을 경우에만 업데이트 (선택적)
+                            if (newData.film_metadata.title_working) currentData.film_metadata.title_working = newData.film_metadata.title_working;
+                            if (newData.film_metadata.confirmed_genre) currentData.film_metadata.confirmed_genre = newData.film_metadata.confirmed_genre;
                         }
 
-                        // 예시: 각 샷의 오디오 관련 정보 병합
+                        // breakdown_data의 shots 내 오디오 관련 정보 병합
+                        // 중요: sequences, scenes 배열 자체는 newData의 것으로 교체하지 않음! 기존 구조 유지!
                         if (newData.breakdown_data && newData.breakdown_data.shots) {
                             newData.breakdown_data.shots.forEach(newShotData => {
                                 const shotIdToFind = newShotData.id;
                                 const existingShot = currentData.breakdown_data.shots.find(shot => shot.id === shotIdToFind);
 
                                 if (existingShot) {
-                                    // audio_prompts 병합
+                                    console.log(`샷 ID ${shotIdToFind}에 오디오 정보 병합 중...`);
                                     if (newShotData.audio_prompts) {
-                                        if (!existingShot.audio_prompts) existingShot.audio_prompts = {};
-                                        for (const key in newShotData.audio_prompts) {
-                                            existingShot.audio_prompts[key] = { ...(existingShot.audio_prompts[key] || {}), ...newShotData.audio_prompts[key] };
-                                        }
+                                        existingShot.audio_prompts = { ...(existingShot.audio_prompts || {}), ...newShotData.audio_prompts };
                                         updated = true;
                                     }
-                                    // content 내 오디오 관련 필드 병합 (dialogue, narration, sound_effects, audio_urls)
                                     if (newShotData.content) {
                                         if (!existingShot.content) existingShot.content = {};
-                                        if (newShotData.content.dialogue) { // dialogue는 객체이므로 덮어쓰기 또는 세부 병합 필요
+                                        if (newShotData.content.dialogue) {
                                             existingShot.content.dialogue = { ...existingShot.content.dialogue, ...newShotData.content.dialogue };
                                             updated = true;
                                         }
@@ -1437,105 +1433,194 @@
                                             existingShot.content.narration = newShotData.content.narration;
                                             updated = true;
                                         }
-                                        if (newShotData.content.sound_effects !== undefined) { // 음향 효과 설명
+                                        if (newShotData.content.sound_effects !== undefined) {
                                             existingShot.content.sound_effects = newShotData.content.sound_effects;
                                             updated = true;
                                         }
-                                        if (newShotData.content.audio_urls) { // audio_urls 객체 병합
-                                            if (!existingShot.content.audio_urls) existingShot.content.audio_urls = {};
-                                            existingShot.content.audio_urls = { ...existingShot.content.audio_urls, ...newShotData.content.audio_urls };
+                                        if (newShotData.content.audio_urls) {
+                                            existingShot.content.audio_urls = { ...(existingShot.content.audio_urls || {}), ...newShotData.content.audio_urls };
                                             updated = true;
                                         }
                                     }
-                                    // music_memo 병합
                                     if (newShotData.music_memo !== undefined) {
                                         existingShot.music_memo = newShotData.music_memo;
                                         updated = true;
                                     }
+                                    // 샷 제목, 설명 등도 newData에 있을 경우 업데이트 (오디오 스테이지에서 수정 가능성)
+                                    if (newShotData.title) existingShot.title = newShotData.title;
+                                    if (newShotData.description) existingShot.description = newShotData.description;
+                                } else {
+                                    console.warn(`(오디오 병합) 샷 ID ${shotIdToFind}를 현재 데이터에서 찾지 못했습니다. 이 샷은 병합되지 않습니다.`);
                                 }
                             });
                         }
 
                         if (updated) {
-                             currentData.timestamp = new Date().toISOString(); // 변경사항이 있을 때만 타임스탬프 업데이트
-                            showMessage('오디오 관련 정보를 현재 데이터에 성공적으로 병합했습니다.', 'success');
+                            currentData.current_stage_name = "audio_prompt_generation"; // 현재 스테이지 이름 업데이트
+                            currentData.timestamp = new Date().toISOString();
+                            message = '스테이지 8 오디오 정보를 현재 데이터에 성공적으로 병합했습니다. (기존 이미지/영상 데이터는 보존됩니다)';
+                            showMessage(message, 'success');
                         } else {
-                            showMessage('오디오 병합을 시도했으나, 변경된 내용이 없거나 대상 데이터를 찾지 못했습니다.', 'info');
+                            message = '스테이지 8 오디오 병합을 시도했으나, 변경된 내용이 없거나 대상 데이터를 찾지 못했습니다.';
+                            showMessage(message, 'info');
                         }
+
                     }
+                    // 2. 스테이지 6 (샷별 AI 이미지 프롬프트) 병합 처리
+                    else if (newData.shots && newData.project_info && newData.shots[0]?.images && newData.shots[0]?.shot_id) {
+                        console.log('스테이지6 형식의 샷별 이미지 프롬프트 데이터 병합을 시도합니다.');
+                        if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots) {
+                            showMessage('스테이지6 데이터를 병합하려면 먼저 스테이지5 데이터를 로드해야 합니다.', 'warning');
+                            event.target.value = ''; // 파일 입력 초기화
+                            return;
+                        }
 
-                    // 가져온 데이터가 샷 중심의 업데이트 데이터일 경우 (shot_prompts 또는 breakdown_data.shots 존재 기준)
-                    // (스테이지 6 스키마는 shot_prompts, 스테이지 7 스키마는 breakdown_data.shots 안에 video_prompts 등을 포함)
-                    else if ((newData.shot_prompts || (newData.breakdown_data && newData.breakdown_data.shots)) && 
-                               currentData && currentData.breakdown_data && currentData.breakdown_data.shots) {
-                        console.log('샷 기반 데이터 병합을 시도합니다.');
-                        const shotsToUpdate = newData.shot_prompts || newData.breakdown_data.shots;
-
-                        shotsToUpdate.forEach(newShotData => {
-                            // 스테이지 6은 shot_id, 스테이지 7은 id 를 사용하므로 둘 다 확인
-                            const shotIdToFind = newShotData.shot_id || newShotData.id; 
+                        newData.shots.forEach(newShotData => {
+                            const shotIdToFind = newShotData.shot_id;
                             const existingShot = currentData.breakdown_data.shots.find(shot => shot.id === shotIdToFind);
 
                             if (existingShot) {
-                                console.log(`샷 ID ${shotIdToFind}에 대한 데이터 업데이트 중...`);
-                                // 스테이지 6의 ai_prompts를 existingShot.image_prompts로 병합
-                                if (newShotData.ai_prompts) {
-                                    if (!existingShot.image_prompts) existingShot.image_prompts = {};
-                                    Object.keys(newShotData.ai_prompts).forEach(aiKey => {
-                                        existingShot.image_prompts[aiKey] = { ...existingShot.image_prompts[aiKey], ...newShotData.ai_prompts[aiKey] };
-                                    });
-                                    console.log(`  - image_prompts 업데이트됨.`);
-                                    updated = true;
-                                }
-                                // 스테이지 7의 video_prompts, video_urls, final_video_selection, video_design 병합
-                                ['video_prompts', 'video_urls', 'final_video_selection', 'video_design'].forEach(videoKey => {
-                                    if (newShotData[videoKey]) {
-                                        existingShot[videoKey] = { ...existingShot[videoKey], ...newShotData[videoKey] };
-                                        console.log(`  - ${videoKey} 업데이트됨.`);
-                                        updated = true;
+                                console.log(`샷 ID ${shotIdToFind}에 대한 이미지 프롬프트 업데이트 중...`);
+                                if (!existingShot.image_prompts) existingShot.image_prompts = {};
+                                IMAGE_AI_TOOLS.forEach(toolId => {
+                                    if (!existingShot.image_prompts[toolId]) {
+                                        existingShot.image_prompts[toolId] = { main_prompt: '', parameters: '' };
                                     }
                                 });
-                                // 스테이지 7의 image_design (스테이지 5 구조) 처리 - HTML의 ai_generated_images와는 별개로, 있다면 업데이트
-                                if (newShotData.image_design && newShotData.image_design.images) { // 스테이지 5/7의 images[]
-                                    if (!existingShot.image_design) existingShot.image_design = {};
-                                    existingShot.image_design.images = newShotData.image_design.images;
-                                    // 만약 HTML의 ai_generated_images도 이 데이터 기준으로 채워야 한다면 추가 로직 필요
-                                    console.log(`  - image_design.images 업데이트됨.`);
-                                    updated = true;
-                                }
-                                // 참조 이미지 병합
-                                if (newShotData.reference_images) {
-                                    existingShot.reference_images = newShotData.reference_images;
-                                    console.log(`  - reference_images 업데이트됨.`);
-                                    updated = true;
-                                }
-                                 // 기타 content, camera_ 등등의 필드도 필요시 병합
-                                ['content', 'camera_movement', 'camera_framing', 'camera_effects', 'other_info'].forEach(key => {
-                                    if (newShotData[key]) {
-                                        existingShot[key] = { ...existingShot[key], ...newShotData[key] };
-                                        updated = true;
+
+                                if (newShotData.images && newShotData.images.length > 0) {
+                                    const firstImageConcept = newShotData.images[0];
+                                    if (firstImageConcept.prompts) {
+                                        // (기존 스테이지6 프롬프트 병합 로직 상세 내용... )
+                                        // Midjourney
+                                        if (firstImageConcept.prompts.midjourney) {
+                                            existingShot.image_prompts.midjourney = {
+                                                main_prompt: firstImageConcept.prompts.midjourney.prompt || '',
+                                                parameters: firstImageConcept.prompts.midjourney.parameters || ''
+                                            };
+                                        }
+                                        const otherAIs = { leonardo: 'leonardo', ideogram: 'ideogram', imagefx: 'imagefx' };
+                                        for (const shortKey in otherAIs) {
+                                            const aiKey = otherAIs[shortKey];
+                                            if (firstImageConcept.prompts[shortKey]) {
+                                                let paramsArray = [];
+                                                if (firstImageConcept.prompts[shortKey].negative_prompt) {
+                                                    paramsArray.push(`Negative: ${firstImageConcept.prompts[shortKey].negative_prompt}`);
+                                                }
+                                                if (firstImageConcept.prompts[shortKey].settings && Object.keys(firstImageConcept.prompts[shortKey].settings).length > 0) {
+                                                    paramsArray.push(`Settings: ${JSON.stringify(firstImageConcept.prompts[shortKey].settings)}`);
+                                                }
+                                                existingShot.image_prompts[aiKey] = {
+                                                    main_prompt: firstImageConcept.prompts[shortKey].prompt || '',
+                                                    parameters: paramsArray.join('; ')
+                                                };
+                                            }
+                                        }
                                     }
-                                });
+                                    if (newShotData.shot_description && (!existingShot.description || newShotData.shot_description.length > existingShot.description.length)) {
+                                        existingShot.description = newShotData.shot_description;
+                                    }
+                                    if (!existingShot.title && newShotData.shot_description) {
+                                        existingShot.title = newShotData.shot_description.substring(0, 30) + (newShotData.shot_description.length > 30 ? '...' : '');
+                                    }
+                                    if (firstImageConcept.csv_attributes && firstImageConcept.csv_attributes["502"]) {
+                                        if (!existingShot.image_design) existingShot.image_design = {};
+                                        existingShot.image_design.aspect_ratio = firstImageConcept.csv_attributes["502"];
+                                    }
+                                    updated = true;
+                                }
                             } else {
-                                console.warn(`가져온 데이터의 샷 ID ${shotIdToFind}를 현재 데이터에서 찾을 수 없습니다.`);
+                                console.warn(`스테이지6 데이터의 샷 ID ${shotIdToFind}를 현재 데이터에서 찾을 수 없습니다.`);
                             }
                         });
-                        if(updated) showMessage('가져온 JSON의 샷 정보를 현재 데이터에 병합/업데이트했습니다.', 'success');
-                        else showMessage('가져온 JSON에서 업데이트할 샷 정보를 찾지 못했거나, 변경사항이 없습니다.', 'info');
 
-                    } else {
-                        showMessage('가져온 JSON 파일의 구조를 인식할 수 없거나, 현재 데이터와 병합할 수 없습니다.', 'warning');
-                        event.target.value = ''; // 파일 입력 초기화
-                        return; 
+                        if(updated) showMessage('스테이지6 이미지 프롬프트 정보를 현재 데이터에 성공적으로 병합/업데이트했습니다.', 'success');
+                        else showMessage('스테이지6 JSON에서 업데이트할 샷 정보를 찾지 못했거나, 변경사항이 없습니다.', 'info');
+
+                    }
+                    // 3. 스테이지 5 또는 그와 유사한 "전체 프로젝트 구조" 로드 (덮어쓰기)
+                    //    (단, 위에서 특정 스테이지 병합 로직에 걸리지 않은 경우)
+                    else if (newData.film_metadata && newData.breakdown_data && newData.breakdown_data.sequences) {
+                        console.log('전체 프로젝트 구조 데이터로 덮어씁니다 (예: 스테이지5 로드).');
+                        currentData = newData; // 전체 데이터 덮어쓰기
+                        
+                        // 덮어쓴 후, 각 샷에 이미지 관련 필드가 없다면 초기화 (기존 로직 유지)
+                        if (currentData.breakdown_data && currentData.breakdown_data.shots) {
+                            currentData.breakdown_data.shots.forEach(shot => {
+                                if (!shot.image_prompts) shot.image_prompts = {};
+                                IMAGE_AI_TOOLS.forEach(toolId => {
+                                    if (!shot.image_prompts[toolId]) shot.image_prompts[toolId] = { main_prompt: '', parameters: '' };
+                                });
+                                if (!shot.image_design) shot.image_design = { aspect_ratio: "16:9", ai_generated_images: {} };
+                                else if (!shot.image_design.ai_generated_images) shot.image_design.ai_generated_images = {};
+                                IMAGE_AI_TOOLS.forEach(toolId => {
+                                     if(!shot.image_design.ai_generated_images[toolId]) {
+                                        shot.image_design.ai_generated_images[toolId] = [ { url: '', description: '' }, { url: '', description: '' }, { url: '', description: '' } ];
+                                     }
+                                });
+                                // 오디오 관련 필드도 필요하다면 여기서 기본 구조 생성 가능 (선택사항)
+                                if (!shot.content) shot.content = {};
+                                if (!shot.content.audio_urls) shot.content.audio_urls = { dialogue: "", narration: "", sound_effects: ""};
+                                if (!shot.audio_prompts) shot.audio_prompts = { dialogue: {prompt:"", settings:{}}, narration: {prompt:"", settings:{}}, sound_effects: {prompt:"", settings:{}} };
+                            });
+                        }
+                        updated = true;
+                        message = (newData.film_metadata.title_working || '프로젝트') + ' 전체 데이터를 로드했습니다 (기존 데이터 덮어쓰기).';
+                        showMessage(message, 'success');
+                    }
+                    // 4. 기타 특정 필드 병합 로직 (예: 영상 정보 업데이트 등 - 더 구체적인 조건 필요시 추가)
+                    else if (currentData && currentData.breakdown_data && currentData.breakdown_data.shots && (newData.shot_prompts || (newData.breakdown_data && newData.breakdown_data.shots && !newData.breakdown_data.sequences /* 시퀀스 없는 샷 목록일때 */ ))) {
+                        console.log('특정 샷 기반 데이터 병합을 시도합니다 (예: 영상 정보).');
+                        const shotsToUpdate = newData.shot_prompts || newData.breakdown_data.shots;
+                        let individualShotUpdated = false;
+                        shotsToUpdate.forEach(newShotData => {
+                            const shotIdToFind = newShotData.shot_id || newShotData.id;
+                            const existingShot = currentData.breakdown_data.shots.find(shot => shot.id === shotIdToFind);
+
+                            if (existingShot) {
+                                // 영상 관련 필드 병합 (기존 로직 예시)
+                                ['video_prompts', 'video_urls', 'final_video_selection', 'video_design'].forEach(videoKey => {
+                                    if (newShotData[videoKey]) {
+                                        existingShot[videoKey] = { ...(existingShot[videoKey] || {}), ...newShotData[videoKey] };
+                                        individualShotUpdated = true;
+                                    }
+                                });
+                                // 기타 필요한 필드 병합 로직 추가 가능
+                            }
+                        });
+                        if(individualShotUpdated) {
+                            updated = true; // updated 플래그를 여기서 설정
+                            message = '특정 샷 정보를 현재 데이터에 병합/업데이트했습니다.';
+                            showMessage(message, 'success');
+                        } else {
+                             message = '샷 정보 병합을 시도했으나 변경사항이 없거나 대상 샷을 찾지 못했습니다.';
+                             showMessage(message, 'info');
+                        }
+                    }
+                    // 5. 어떤 조건에도 해당하지 않는 경우
+                    else {
+                        message = '가져온 JSON 파일의 구조를 인식할 수 없거나, 현재 데이터와 병합/로드할 수 없습니다. 파일 형식을 확인해주세요.';
+                        showMessage(message, 'warning');
+                        event.target.value = '';
+                        return;
                     }
 
-                    saveDataToLocalStorage();
-                    updateUI(); 
-                    // 병합 후 현재 선택된 샷이 있다면 해당 탭 다시 로드
-                    if (selectedType === 'shot' && selectedId) {
-                        showShotContent(selectedId);
-                        const lastActiveTab = localStorage.getItem(`shot_${selectedId}_activeTab`) || 'info';
-                        setTimeout(() => switchTab(lastActiveTab, selectedId), 0);
+                    // --- 조건문 순서 및 로직 수정 끝 ---
+
+                    if (updated) {
+                        saveDataToLocalStorage();
+                        updateUI();
+                        if (selectedType === 'shot' && selectedId) {
+                            showShotContent(selectedId); // 현재 선택된 샷 UI 새로고침
+                            const lastActiveTab = localStorage.getItem(`shot_${selectedId}_activeTab`) || 'info';
+                            setTimeout(() => switchTab(lastActiveTab, selectedId), 0); // 탭 상태 복원
+                        } else if (selectedType === 'scene' && selectedId) {
+                            showSceneContent(selectedId);
+                        } else if (selectedType === 'sequence' && selectedId) {
+                            showSequenceContent(selectedId);
+                        } else {
+                            updateNavigation(); // 네비게이션만 새로고침 (전체 로드시)
+                        }
                     }
 
                 } catch (parseError) {
