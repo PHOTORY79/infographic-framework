@@ -1539,6 +1539,76 @@
                         else showMessage('스테이지6 JSON에서 업데이트할 샷 정보를 찾지 못했거나, 변경사항이 없습니다.', 'info');
 
                     }
+                    // ✨ NEW: 스테이지 7 (영상 관련 데이터) 병합 처리
+                    else if ( (newData.current_stage_name === "video_prompt_generation" || (newData.breakdown_data && newData.breakdown_data.shots && newData.breakdown_data.shots[0] && (newData.breakdown_data.shots[0].video_prompts || newData.breakdown_data.shots[0].video_urls || newData.breakdown_data.shots[0].video_design))) && newData.film_metadata && newData.breakdown_data && newData.breakdown_data.shots ) {
+                        console.log('🎬 스테이지 7 형식 또는 영상 관련 프롬프트 포함 데이터 병합을 시도합니다.');
+                        if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots || currentData.breakdown_data.shots.length === 0) {
+                            showMessage('영상 데이터를 병합하려면 먼저 유효한 기본 프로젝트 데이터(샷 포함)를 로드해야 합니다.', 'warning');
+                            event.target.value = '';
+                            return;
+                        }
+                        let videoDataUpdated = false;
+
+                        // film_metadata는 보통 영상 스테이지에서 크게 바뀌지 않지만, 필요시 선택적 병합
+                        if (newData.film_metadata) {
+                            if (!currentData.film_metadata) currentData.film_metadata = {};
+                            if (newData.film_metadata.title_working) currentData.film_metadata.title_working = newData.film_metadata.title_working;
+                            // 필요한 다른 film_metadata 필드가 있다면 여기에 추가
+                        }
+
+                        // breakdown_data의 shots 내 영상 관련 정보 병합
+                        if (newData.breakdown_data && newData.breakdown_data.shots) {
+                            newData.breakdown_data.shots.forEach(newShotData => {
+                                const shotIdToFind = newShotData.id;
+                                const existingShot = currentData.breakdown_data.shots.find(shot => shot.id === shotIdToFind);
+
+                                if (existingShot) {
+                                    console.log(`샷 ID ${shotIdToFind}에 영상 정보 병합 중...`);
+                                    // video_prompts 병합 (AI 도구별 프롬프트 객체)
+                                    if (newShotData.video_prompts) {
+                                        if (!existingShot.video_prompts) existingShot.video_prompts = {};
+                                        for (const key in newShotData.video_prompts) {
+                                            existingShot.video_prompts[key] = { ...(existingShot.video_prompts[key] || {}), ...newShotData.video_prompts[key] };
+                                        }
+                                        videoDataUpdated = true;
+                                    }
+                                    // video_urls 병합 (AI 도구별 URL 객체)
+                                    if (newShotData.video_urls) {
+                                        if (!existingShot.video_urls) existingShot.video_urls = {};
+                                        for (const key in newShotData.video_urls) {
+                                            existingShot.video_urls[key] = newShotData.video_urls[key]; // URL은 보통 직접 교체
+                                        }
+                                        videoDataUpdated = true;
+                                    }
+                                    // video_design 병합 (선택된 AI, URL 등)
+                                    if (newShotData.video_design) {
+                                        existingShot.video_design = { ...(existingShot.video_design || {}), ...newShotData.video_design };
+                                        videoDataUpdated = true;
+                                    }
+                                    // final_video_selection 필드가 있다면 그것도 병합
+                                    if (newShotData.final_video_selection) {
+                                        existingShot.final_video_selection = { ...(existingShot.final_video_selection || {}), ...newShotData.final_video_selection };
+                                        videoDataUpdated = true;
+                                    }
+
+                                    // 샷 제목, 설명 등도 newData에 있을 경우 업데이트
+                                    if (newShotData.title) existingShot.title = newShotData.title;
+                                    if (newShotData.description) existingShot.description = newShotData.description;
+                                } else {
+                                    console.warn(`(영상 병합) 샷 ID ${shotIdToFind}를 현재 데이터에서 찾지 못했습니다. 이 샷은 병합되지 않습니다.`);
+                                }
+                            });
+                        }
+
+                        if (videoDataUpdated) {
+                            if (newData.current_stage_name) currentData.current_stage_name = newData.current_stage_name;
+                            currentData.timestamp = new Date().toISOString();
+                            updated = true; // 전체 updated 플래그도 true로 설정
+                            showMessage('스테이지 7 영상 정보를 현재 데이터에 성공적으로 병합했습니다. (기존 다른 데이터는 보존됩니다)', 'success');
+                        } else {
+                            showMessage('스테이지 7 영상 병합을 시도했으나, 변경된 내용이 없거나 대상 데이터를 찾지 못했습니다.', 'info');
+                        }
+                    }
                     // 3. 스테이지 5 또는 그와 유사한 "전체 프로젝트 구조" 로드 (덮어쓰기)
                     //    (단, 위에서 특정 스테이지 병합 로직에 걸리지 않은 경우)
                     else if (newData.film_metadata && newData.breakdown_data && newData.breakdown_data.sequences) {
