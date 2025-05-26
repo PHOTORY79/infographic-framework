@@ -1384,88 +1384,111 @@
                     // --- 조건문 순서 및 로직 수정 시작 ---
 
                     // 1. 스테이지 8 (오디오 프롬프트 생성) 데이터 병합 우선 처리
-                    if (newData.current_stage_name === "audio_prompt_generation" && newData.film_metadata && newData.breakdown_data && newData.breakdown_data.shots) {
+                    if (newData.current_stage_name === "audio_prompt_generation" && newData.breakdown_data && newData.breakdown_data.shots) {
                         console.log('🎧 스테이지 8 (오디오 프롬프트 생성) 데이터 병합을 시도합니다.');
                         if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots || currentData.breakdown_data.shots.length === 0) {
                             message = '오디오 데이터를 병합하려면 먼저 유효한 기본 프로젝트 데이터(샷 포함)를 로드해야 합니다.';
                             showMessage(message, 'warning');
-                            event.target.value = '';
+                            event.target.value = ''; // 파일 입력 초기화
                             return;
                         }
 
-                        // film_metadata 병합 (음악 관련 및 기본 정보)
+                        let audioMergePerformed = false; // 오디오 관련 실제 병합이 일어났는지 추적
+
+                        // film_metadata에서 프로젝트 레벨 음악 정보만 병합 (선택적)
                         if (newData.film_metadata) {
                             if (!currentData.film_metadata) currentData.film_metadata = {};
-                            // 음악 프롬프트 병합 (newData 우선)
+                            
+                            // 프로젝트 음악 프롬프트 병합
                             if (newData.film_metadata.project_music_prompts) {
-                                currentData.film_metadata.project_music_prompts = { ...currentData.film_metadata.project_music_prompts, ...newData.film_metadata.project_music_prompts };
-                                updated = true;
+                                if (!currentData.film_metadata.project_music_prompts) currentData.film_metadata.project_music_prompts = {};
+                                currentData.film_metadata.project_music_prompts = { 
+                                    ...currentData.film_metadata.project_music_prompts, 
+                                    ...newData.film_metadata.project_music_prompts 
+                                };
+                                audioMergePerformed = true; // updated 플래그 대신 audioMergePerformed 사용
                             }
-                            // 음악 URL 병합 (newData 우선)
+                            // 프로젝트 음악 URL 병합
                             if (newData.film_metadata.project_music_urls) {
-                                currentData.film_metadata.project_music_urls = { ...currentData.film_metadata.project_music_urls, ...newData.film_metadata.project_music_urls };
-                                updated = true;
+                                if (!currentData.film_metadata.project_music_urls) currentData.film_metadata.project_music_urls = {};
+                                currentData.film_metadata.project_music_urls = { 
+                                    ...currentData.film_metadata.project_music_urls, 
+                                    ...newData.film_metadata.project_music_urls 
+                                };
+                                audioMergePerformed = true;
                             }
-                            // 영화 제목, 장르 등은 newData에 있을 경우에만 업데이트 (선택적)
-                            if (newData.film_metadata.title_working) currentData.film_metadata.title_working = newData.film_metadata.title_working;
-                            if (newData.film_metadata.confirmed_genre) currentData.film_metadata.confirmed_genre = newData.film_metadata.confirmed_genre;
+                            // 중요: 영화 제목, 장르 등 다른 film_metadata는 오디오 병합 시 업데이트하지 않음
                         }
 
                         // breakdown_data의 shots 내 오디오 관련 정보 병합
-                        // 중요: sequences, scenes 배열 자체는 newData의 것으로 교체하지 않음! 기존 구조 유지!
-                        if (newData.breakdown_data && newData.breakdown_data.shots) {
+                        if (newData.breakdown_data.shots) {
                             newData.breakdown_data.shots.forEach(newShotData => {
                                 const shotIdToFind = newShotData.id;
                                 const existingShot = currentData.breakdown_data.shots.find(shot => shot.id === shotIdToFind);
 
                                 if (existingShot) {
                                     console.log(`샷 ID ${shotIdToFind}에 오디오 정보 병합 중...`);
+                                    let shotUpdated = false; // 개별 샷 업데이트 여부
+
+                                    // audio_prompts 병합
                                     if (newShotData.audio_prompts) {
-                                        existingShot.audio_prompts = { ...(existingShot.audio_prompts || {}), ...newShotData.audio_prompts };
-                                        updated = true;
+                                        if (!existingShot.audio_prompts) existingShot.audio_prompts = {};
+                                        existingShot.audio_prompts = { ...existingShot.audio_prompts, ...newShotData.audio_prompts };
+                                        shotUpdated = true;
                                     }
+
+                                    // content 내 오디오 관련 필드 병합
                                     if (newShotData.content) {
-                                        if (!existingShot.content) existingShot.content = {};
+                                        if (!existingShot.content) existingShot.content = {}; // 기존 content 객체가 없으면 생성
+                                        
                                         if (newShotData.content.dialogue) {
+                                            if (!existingShot.content.dialogue) existingShot.content.dialogue = {};
                                             existingShot.content.dialogue = { ...existingShot.content.dialogue, ...newShotData.content.dialogue };
-                                            updated = true;
+                                            shotUpdated = true;
                                         }
                                         if (newShotData.content.narration !== undefined) {
                                             existingShot.content.narration = newShotData.content.narration;
-                                            updated = true;
+                                            shotUpdated = true;
                                         }
+                                        // Stage 8 JSON의 content.sound_effects는 한국어 설명일 수 있음.
+                                        // 실제 영어 프롬프트는 newShotData.audio_prompts.sound_effects.prompt에 있어야 함.
+                                        // 여기서는 content.sound_effects (설명)를 업데이트
                                         if (newShotData.content.sound_effects !== undefined) {
                                             existingShot.content.sound_effects = newShotData.content.sound_effects;
-                                            updated = true;
+                                            shotUpdated = true;
                                         }
                                         if (newShotData.content.audio_urls) {
-                                            existingShot.content.audio_urls = { ...(existingShot.content.audio_urls || {}), ...newShotData.content.audio_urls };
-                                            updated = true;
+                                            if (!existingShot.content.audio_urls) existingShot.content.audio_urls = {};
+                                            existingShot.content.audio_urls = { ...existingShot.content.audio_urls, ...newShotData.content.audio_urls };
+                                            shotUpdated = true;
                                         }
                                     }
+
+                                    // music_memo 병합
                                     if (newShotData.music_memo !== undefined) {
                                         existingShot.music_memo = newShotData.music_memo;
-                                        updated = true;
+                                        shotUpdated = true;
                                     }
-                                    // 샷 제목, 설명 등도 newData에 있을 경우 업데이트 (오디오 스테이지에서 수정 가능성)
-                                    if (newShotData.title) existingShot.title = newShotData.title;
-                                    if (newShotData.description) existingShot.description = newShotData.description;
+                                    
+                                    if(shotUpdated) audioMergePerformed = true; // 개별 샷에서라도 업데이트가 발생했다면 전체 플래그 true
+
+                                    // 중요: 샷의 title, description 등 다른 비-오디오 필드는 여기서 업데이트하지 않음!
                                 } else {
                                     console.warn(`(오디오 병합) 샷 ID ${shotIdToFind}를 현재 데이터에서 찾지 못했습니다. 이 샷은 병합되지 않습니다.`);
                                 }
                             });
                         }
 
-                        if (updated) {
-                            currentData.current_stage_name = "audio_prompt_generation"; // 현재 스테이지 이름 업데이트
+                        if (audioMergePerformed) { // audioMergePerformed 플래그 사용
+                            currentData.current_stage_name = newData.current_stage_name; // "audio_prompt_generation"으로 설정
                             currentData.timestamp = new Date().toISOString();
-                            message = '스테이지 8 오디오 정보를 현재 데이터에 성공적으로 병합했습니다. (기존 이미지/영상 데이터는 보존됩니다)';
+                            updated = true; // 전역 updated 플래그도 true로 설정 (UI 갱신 등을 위해)
+                            message = '스테이지 8 오디오 정보를 현재 데이터에 성공적으로 병합했습니다. (오디오 관련 정보만 업데이트됨)';
                             showMessage(message, 'success');
                         } else {
                             message = '스테이지 8 오디오 병합을 시도했으나, 변경된 내용이 없거나 대상 데이터를 찾지 못했습니다.';
                             showMessage(message, 'info');
                         }
-
                     }
                     // 2. 스테이지 6 (샷별 AI 이미지 프롬프트) 병합 처리
                     else if (newData.shots && newData.project_info && newData.shots[0]?.images && newData.shots[0]?.shot_id) {
