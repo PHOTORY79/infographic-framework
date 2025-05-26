@@ -1540,7 +1540,7 @@
 
                     }
                     // ✨ NEW: 스테이지 7 (영상 관련 데이터) 병합 처리
-                    else if ( (newData.current_stage_name === "video_prompt_generation" || (newData.breakdown_data && newData.breakdown_data.shots && newData.breakdown_data.shots[0] && (newData.breakdown_data.shots[0].video_prompts || newData.breakdown_data.shots[0].video_urls || newData.breakdown_data.shots[0].video_design))) && newData.film_metadata && newData.breakdown_data && newData.breakdown_data.shots ) {
+                    else if ( newData.current_stage_name === "video_prompt_generation" && newData.film_metadata && newData.breakdown_data && newData.breakdown_data.shots && newData.breakdown_data.shots.length > 0 ) {
                         console.log('🎬 스테이지 7 형식 또는 영상 관련 프롬프트 포함 데이터 병합을 시도합니다.');
                         if (!currentData || !currentData.breakdown_data || !currentData.breakdown_data.shots || currentData.breakdown_data.shots.length === 0) {
                             showMessage('영상 데이터를 병합하려면 먼저 유효한 기본 프로젝트 데이터(샷 포함)를 로드해야 합니다.', 'warning');
