@@ -2550,7 +2550,28 @@
         function updateCurrentMusicDescription(shotId,description){try{const s=currentData.breakdown_data.shots.find(sh=>sh.id===shotId);if(!s)return;if(!s.content)s.content={music:''};s.content.music=description;saveDataToLocalStorage();showMessage('음악 설명 업데이트','success')}catch(e){showMessage('음악 설명 업데이트 실패','error')}}
 
         // 컨셉아트 보기
-        function openConceptArt(){try{window.open(`${getProjectName().replace(/ /g,'')}_ConceptArt.html`,'_blank')}catch(e){showMessage('컨셉아트 열기 실패','warning')}}
+        function openConceptArt() {
+            try {
+                // 1. 현재 HTML 파일의 전체 이름 가져오기 (예: "MyMovie.html" 또는 "aifi_film_framework_v2.0.html")
+                const htmlFullFileName = window.location.pathname.split('/').pop(); 
+        
+                // 2. 확장자 ".html" 제거해서 기본 이름 만들기 (예: "MyMovie" 또는 "aifi_film_framework_v2.0")
+                const baseName = htmlFullFileName.replace('.html', ''); 
+        
+                // 3. 기본 이름 뒤에 "_c.html" 붙여서 최종 컨셉아트 파일 이름 완성 (예: "MyMovie_c.html")
+                const conceptArtFileName = `${baseName}_c.html`; 
+        
+                console.log('생성된 컨셉아트 파일명:', conceptArtFileName); // 잘 만들어졌는지 확인용 로그
+        
+                // 4. 새 탭에서 컨셉아트 HTML 파일 열기
+                window.open(conceptArtFileName, '_blank');
+        
+            } catch (e) {
+                // 5. 혹시 오류가 생기면 콘솔과 화면에 메시지 표시
+                console.error('컨셉아트 열기 오류:', e);
+                showMessage('컨셉아트 열기 중 오류가 발생했습니다: ' + e.message, 'error');
+            }
+        }
 
         // 이벤트 리스너 설정
         function setupEventListeners() {
